@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
+
 int pointers()
 {
   int f = 2;
@@ -20,6 +21,7 @@ int pointers()
     ptr2++;
   }
 }
+
 
  int main() {
   double weight;
