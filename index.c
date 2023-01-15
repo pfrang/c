@@ -47,7 +47,7 @@ int pointers()
   int matrixSize = strlen(stringArr);
   int actualStrLength = sizeof(matrixSize);
   printf("Matrix size %d\n", actualStrLength);
-  int sizeofDef = sizeof(matrix);
+  int sizeofDef = sizeof(matrix); //sizeof declares how much memory it occupies
   printf("%i\n", sizeofDef);
 
   printf("-------------------------\n");
