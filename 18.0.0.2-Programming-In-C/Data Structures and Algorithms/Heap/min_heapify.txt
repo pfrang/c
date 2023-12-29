@@ -1,0 +1,30 @@
+void min_heap(int arr[], int i, int N){
+
+
+    int left = 2*i; // indices for left children
+    int right = 2*i+1; // indices for right children
+
+    if(left <= N  and arr[left] < arr[i]){
+        smallest = left;
+    }
+    
+    else{
+        smallest = i;
+    }
+
+    if(right <= N  and arr[right] > arr[smallest]){
+        smallest = right;
+    }
+
+    if(smallest != i){
+        swap(arr[i], arr[smallest]);
+        max_heap(arr,largest,N);
+    }
+}
+
+
+int build_min_heap(int arr[], int i){
+    for(int i = N/2; i>=1; i--){
+        build_min_heap(arr,i);
+    }
+}

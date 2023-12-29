@@ -1,0 +1,30 @@
+void max_heap(int arr[], int i, int N){
+
+
+    int left = 2*i; // indices for left children
+    int right = 2*i+1; // indices for right children
+
+    if(left <= N  and arr[left] > arr[i]){
+        largest = left;
+    }
+    
+    else{
+        largest = i;
+    }
+
+    if(right <= N  and arr[right] > arr[largest]){
+        largest = right;
+    }
+
+    if(largest != i){
+        swap(arr[i], arr[largest]);
+        max_heap(arr,largest,N);
+    }
+}
+
+
+int build_max_heap(int arr[], int i){
+    for(int i = N/2; i>=1; i--){
+        build_max_heap(arr,i);
+    }
+}

@@ -1,0 +1,53 @@
+
+// Circular Queue ka inserting pseudo code
+Enqueue(X):
+    if(rear+1)%N == front: // front = rear++;
+        return;
+    else if(Isempty()):
+        front <- rear <- 0
+        // front = 0 , rear = 0
+    else:
+        rear <- (rear+1)%N  // rear = rear+1
+
+
+// Circular Queue ka deleting pseudo code
+DeQueue():
+    if(IsEmpty()):
+        return
+    else if(front == rear):
+        front <- rear <- 1
+    else:
+        front <- (front+1)%N // front = front+1;
+
+
+
+// Circular Increment
+(rear+1)%N
+(front+1)%N
+
+// Circular Decrement
+(rear+N-1)%N
+(front+N-1)%N
+
+//Linear Increment
+rear++
+front++
+
+// Linear Decrement
+rear--
+front--
+
+
+(0+1)%7 = (1)%7 = 1
+(1+1)%7 = (2)%7 = 2
+(2+1)%7 = (3)%7 = 3
+(3+1)%7 = (4)%7 = 4
+(4+1)%7 = (5)%7 = 5
+(5+1)%7 = (6)%7 = 6
+(6+1)%7 = (7)%7 = 0
+
+(dividend) % divisor 
+
+if(dividend < divisor) => ans = dividend
+else if(dividend == divisor) => ans = (0)
+else divide the both

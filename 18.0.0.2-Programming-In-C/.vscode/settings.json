@@ -1,0 +1,17 @@
+{
+        "C_Cpp.errorSquiggles": "Disabled",
+        "files.associations": {
+            "bitset": "cpp",
+            "vector": "cpp",
+            "memory": "cpp",
+            "optional": "cpp",
+            "string_view": "cpp",
+            "string": "cpp",
+            "system_error": "cpp",
+            "thread": "cpp",
+            "typeindex": "cpp",
+            "variant": "cpp",
+            "Add_Two_Numbers.C": "cpp",
+            "8-Calculator_using_Switch.C": "cpp"
+        }
+}

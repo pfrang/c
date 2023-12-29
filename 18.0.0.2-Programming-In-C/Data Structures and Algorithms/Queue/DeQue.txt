@@ -1,0 +1,12 @@
+Deque = Doubly ended Queue
+
+It can insert and delete the element from both the ends of the Queue
+
+1.) isEmpty()
+2.) isFull()
+3.) insertFront() -> insert to the front part
+4.) insertLast()-> insert to the last part
+5.) deleteFront() -> delete to the front part
+6.) deleteLast() -> delete to the last part
+7.) getFront() -> return the front part
+8.) getLast() -> return the last part
