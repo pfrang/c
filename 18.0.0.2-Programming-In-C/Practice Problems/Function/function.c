@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include <conio.h>
 
 
-/*FUNCTION IS A BLOCK OF CODE WHICH CAN BE 
-USED LATER IN (MAIN FUNCTION OR ANY OTHER FUNCTION) 
+
+/*FUNCTION IS A BLOCK OF CODE WHICH CAN BE
+USED LATER IN (MAIN FUNCTION OR ANY OTHER FUNCTION)
 TO DO SOME TASK.
 */
 
@@ -39,7 +39,7 @@ int fibo_recursion(int n){ //4
     return fibo_recursion(n-1) + fibo_recursion(n-2);
     // fibo(4-1) + fibo(4-2) => fibo(3) + fibo(2) = 1+2 = 3
 
-    // fibo(3) => fibo(2) + fibo(1) => fibo(1) + fibo(0) + fibo(1) = 1+1 =2 
+    // fibo(3) => fibo(2) + fibo(1) => fibo(1) + fibo(0) + fibo(1) = 1+1 =2
     // fibo(2) => fibo(1) + fibo(0) => 1+0 = 1
 
     // 0,1,1,2,3,5,8,13
@@ -58,5 +58,5 @@ int main(){
     sum_void(a,b);
     int ans = sum_int(a,b);
     printf("SUM is(int): %d", (ans));
-    return 0;   
+    return 0;
 }
