@@ -59,6 +59,8 @@ int main(void) {
     projectile *TestPointer3 = &TestPointer2;
     TestPointer3->Damage = 6;  // I haven now changed Testpointer2's value to 6
     printf("%d \n", TestPointer2.Damage);
+
+    bitOperators();
 }
 
 void arrayIndexing(void) {
@@ -104,4 +106,84 @@ void arrayIndexing(void) {
     // field would not be available in the regular byte pointer, but on casting and telling C we know that this memory address holds
     Thirty->Damage = 100;
     // our struct, we can cast it and let C chill enusring we are a "pro programmer"
+}
+
+void bitOperators(void) {
+    // byte shifting
+    // The expression 1 << 4 uses the bitwise left shift operator (<<).
+    // This operator shifts the bits of the number on the left
+    // (in this case 1), to the left by the number of positions
+    // specified on the right (in this case 4).
+    char unsigned Byt;     // 0
+    Byt = (1 << 4);        // 16
+    Byt = Byt + (1 << 4);  // 16
+
+    char unsigned Byte = 1;  // 1
+    Byte = Byte << 1;        // 2
+    Byte = Byte << 1;        // 4
+    Byte = Byte << 1;        // 8
+    Byte = Byte << 1;        // 16
+    Byte = Byte << 1;        // 32
+    Byte = Byte << 1;        // 64
+    Byte = Byte << 1;        // 128
+    // Byte = Byte << 1;                 // 256 - overflow
+    printf("%d \n", Byte);
+
+    // set value by bite shifting
+
+    char unsigned Byte2 = 0;  // 0
+
+    // what | means is to execute the operation on the
+    // When you perform a bitwise OR operation (|),
+    // for each bit in the binary representation,
+    // it combines all of the set bits
+    // from both numbers to produce the final result.
+    // If either or both bits are 1, the result is 1.
+    // If both bits are 0, the result is 0.
+    // 0 | 0 = 0
+    // 0 | 1 = 1
+    // 1 | 0 = 1
+    // 1 | 1 = 1
+
+    char unsigned Byte4;
+
+    Byte4 = 1 | 2;  // 3
+    // 1 | 2 = 3 (0001 | 0010 = 0011) = it keeps 1 in both checks
+    Byte4 = 1 & 2;  // 0 (0001 & 0010 = 0000) = it keeps 0 in both checks
+
+    printf("%d Byt4 \n", Byte4);
+
+    Byte2 = Byte2 | (1 << 4);  // 16
+    Byte2 = Byte2 | (1 << 8);  // 24
+    Byte2 = Byte2 & (1 << 4);  // 16
+
+    printf("%d \n", Byte2);
+
+    // the ~ operator is a bitwise NOT operator.
+    // it sets all the bits to the opposite of what they were. 0 to 1
+    // and 1 to 0
+
+    // MASKING
+
+    Byte2 = 16;
+
+    Byte4 = 7;
+    // Only take the bit values that are equal to 1 in both
+    // 0001 0000 = 16
+    // 0000 0111 = 7
+    // 0000 0000 & = 0
+    // Byte2 is masking byte 4, only keeping the bits
+    // that are 1 in both
+    Byte2 = Byte2 & Byte4;  // 0
+
+    char unsigned Byte3 = 0;  // 0
+    Byte3 = ~Byte3;           // 255
+
+    // this a logical || operator, but it returns 1 if either is true, 0 if not
+    int h = 2 || 3;
+    printf("%d \n", h);
+
+    // and this is a logical && operator, returns 1 if both is true
+    int i = 2 && 3;
+    printf("%d \n", i);
 }
