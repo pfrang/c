@@ -4,6 +4,9 @@
 #include <stdio.h>
 
 void arrayIndexing(void);
+void bitOperators(void);
+void logicalOperators(void);
+void loops(void);
 
 struct projectile {
     char unsigned IsThisOnFire;
@@ -49,8 +52,6 @@ int main(void) {
     Test.ParticlesPerSecond = 3;
     Test.HowManyCooks = 4;
 
-    // arrayIndexing();
-
     // accessing members of a struct pointer vs value
 
     projectile TestPointer2;  // When its referencing a value / an actual thing on the stack
@@ -60,7 +61,27 @@ int main(void) {
     TestPointer3->Damage = 6;  // I haven now changed Testpointer2's value to 6
     printf("%d \n", TestPointer2.Damage);
 
-    bitOperators();
+    // switch statement
+
+    int val = 1;
+    switch (val) {  // switch only JUMPS to the first true case, and then executes all the code below. It needs to break in order to exit
+        case 1:
+            printf("1 \n");
+            break;
+        case 2:
+            printf("2 \n");
+            break;
+        case 3:
+            printf("3 \n");
+            break;
+        default:
+            printf("default \n");
+            break;
+    }
+    // arrayIndexing();
+    // bitOperators();
+    // arrayIndexing();
+    loops();
 }
 
 void arrayIndexing(void) {
@@ -179,6 +200,16 @@ void bitOperators(void) {
     char unsigned Byte3 = 0;  // 0
     Byte3 = ~Byte3;           // 255
 
+    // this ^ is an xor operaotr
+    // 1 ^ 1 = 0
+    // 1 ^ 0 = 1
+    // 0 ^ 1 = 1
+    // 0 ^ 0 = 0
+    int j = 2 ^ 3;  // in binary is 0010 ^ 0011 = 0001 = 1. When both bits are 1, return 0
+    printf("%d j \n", j);
+}
+
+void logicalOperators(void) {
     // this a logical || operator, but it returns 1 if either is true, 0 if not
     int h = 2 || 3;
     printf("%d \n", h);
@@ -186,4 +217,37 @@ void bitOperators(void) {
     // and this is a logical && operator, returns 1 if both is true
     int i = 2 && 3;
     printf("%d \n", i);
+}
+
+void loops(void) {
+    int i = 0;
+    // for loop
+    for (i; i <= 10; i++) {
+        printf("%d  \n", i);
+    }
+
+    // while loop
+    int x = 0xa;               // 10
+    int condition = (x != 0);  // 1
+    while (x != 0) {
+        x = x << 4;  // when shift operation pushes 1 out of the 32 bits, it is lost == 0
+        printf("%d \n", i);
+    }
+
+    // with break statement
+    x = 0xa;  // 10
+    while (1) {
+        printf("%d \n", x);
+        if (x == 0) {
+            break;
+        }
+        x = x << 4;
+    }
+
+    // do while loop
+
+    do {
+        printf("%d \n", i);
+        i++;
+    } while (i < 10);
 }
