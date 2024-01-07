@@ -2,11 +2,14 @@
 // to see outputed bytes objdump -d outputfile
 // generate to new file gcc -S your_file.c
 #include <stdio.h>
+#include <string.h>
 
 void arrayIndexing(void);
 void bitOperators(void);
 void logicalOperators(void);
 void loops(void);
+unsigned long switchHustler(char *input);
+void pointers(void);
 
 struct projectile {
     char unsigned IsThisOnFire;
@@ -18,7 +21,69 @@ struct projectile {
     // bytes + 2 bytes = 11, but it reserves 4 bytes for each var, 16
 };
 
-int main(void) {
+// can take in terminal arguments
+int main(int argc, char *argv[]) {
+    if (argc < 2) {  // The first argument is the program name
+        printf("No arguments \n");
+        return 0;
+    };
+
+    // char *input = &argv[1][0];
+
+    char *input = argv[1];
+
+    printf("%p \n", input);
+    printf("%s \n", input);
+
+    switch (switchHustler(input)) {  // switch only JUMPS to the first true case, and then executes all the code below. It needs to break in order to exit
+        case 1:
+            loops();
+            break;
+        case 2:
+            arrayIndexing();
+            break;
+        case 3:
+            bitOperators();
+            break;
+        case 4:
+            pointers();
+            break;
+        default:
+            printf("default \n");
+            break;
+    }
+
+    char input2[] = "hello2";
+
+    // unsigned long hei = switchHustler();
+    // return 0;
+    // arrayIndexing();
+    // bitOperators();
+    // pointers();
+    // loops();
+}
+
+unsigned long switchHustler(char *input) {
+    int i;
+
+    for (i = 0; i < sizeof(input); i++) {
+        printf("%c \n", input[i]);
+    }
+
+    if (strcmp(input, "loops") == 0) {
+        return 1;
+    } else if (strcmp(input, "index") == 0) {
+        return 2;
+    } else if (strcmp(input, "bit") == 0) {
+        return 3;
+    } else if (strcmp(input, "pointers") == 0) {
+        return 4;
+    } else {
+        return 0;
+    }
+}
+
+void pointers(void) {
     char unsigned s = 's';  // 8 bits - 2^8 = 256 different values - [-128, 127]
     char unsigned SmallU;   // 8 bits - 2^8 = 256 diffetrent values - [0, 255]
     short MediumS = 16;     // 16 bits - 2^16 = 65536
@@ -58,30 +123,61 @@ int main(void) {
     TestPointer2.Damage = 5;  // with dot (.)
     // THese are the same
     projectile *TestPointer3 = &TestPointer2;
-    TestPointer3->Damage = 6;  // I haven now changed Testpointer2's value to 6
-    printf("%d \n", TestPointer2.Damage);
+    TestPointer3->Damage = 6;    // I haven now changed Testpointer2's value to 6
+    (*TestPointer3).Damage = 7;  // -> is the same as (*)
 
-    // switch statement
-
-    int val = 1;
-    switch (val) {  // switch only JUMPS to the first true case, and then executes all the code below. It needs to break in order to exit
-        case 1:
-            printf("1 \n");
-            break;
-        case 2:
-            printf("2 \n");
-            break;
-        case 3:
-            printf("3 \n");
-            break;
-        default:
-            printf("default \n");
-            break;
+    int *ptr = 0;
+    int y = 5;
+    if (y == 5) {
+        int x = 6;
+        int y = 4;
+        ptr = &x;
     }
-    // arrayIndexing();
-    // bitOperators();
-    // arrayIndexing();
-    loops();
+
+    // THIs is asking for trouble, should never allocate memory to in-scope variable
+    *ptr = 7;  // this is the same as x = 7, but x is out of scope so its not recommended
+
+    printf("%d \n", *ptr);  // 7
+
+    int *ptr2 = 0;
+
+    int y2 = (*ptr);  // DEREFERENCING - chasing the pointer
+
+    printf("%d \n", y2);  // 7
+
+    // Double pointer
+    int y3 = 5;
+    int *ptr4 = 0;
+    int **ptrptr3 = 0;
+
+    if (y3 == 5) {
+        int x3 = 6;
+        int y3 = 4;
+
+        ptr4 = &x3;
+        ptrptr3 = &ptr4;  // Pointer of a pointer to the adress of a pointer. This is a double pointer
+    }
+
+    y3 = (**ptrptr3);     // DEREFERENCING - since its referencing a pointer, we need to dereference twice. Chase the pointer's pointer
+    printf("%d \n", y3);  // 6
+    // THIs is asking for trouble, should never allocate memory to in-scope variable
+
+    // to display inner block scoped vars
+
+    int y4 = 5;
+    int *ptr5 = 0;
+    int *ptr6 = 0;
+
+    ptr5 = &y4;
+
+    if (y4 == 5) {
+        int y4 = 4;
+        ptr6 = &y4;
+    }
+
+    // printf memory address pointer
+    printf("%p \n", ptr5);
+    printf("%p \n", ptr6);
 }
 
 void arrayIndexing(void) {
