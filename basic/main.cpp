@@ -24,6 +24,12 @@ struct projectile {
 // can take in terminal arguments
 int main(int argc, char *argv[]) {
     if (argc < 2) {  // The first argument is the program name
+        int i = 0;
+        char input;
+        printf("Enter a char: ");
+        scanf("%c", &input);
+
+        printf("%c \n", input);
         printf("No arguments \n");
         return 0;
     };
