@@ -14,7 +14,7 @@ int initialize_employee(struct employee_t *e) {
   static int numEmployees = 0;// What the static keyword do is that only within this function it can be controlled
   numEmployees++; // because it doesnt get destroyed when the function returns it doesnt get stored on the stack saviing it ini a special place "data center"
   // this is often referred to as data hidinig as you are hiding the implementation another place
-
+  // So when calling this function again value is not 0
   e->id = numEmployees; 
   e->income = 0;
   e->staff = false;
