@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
   float f = 3.14;
   double d =
       3.14159; // You want to use double instead of float due to precision
-  printf("sizeof float %lu sizeof float %lu\n", sizeof(float), sizeof(double));
+  printf("sizeof float %lu sizeof double %lu\n", sizeof(float), sizeof(double));
   long idLong;
   unsigned long idUlLong;
 }
