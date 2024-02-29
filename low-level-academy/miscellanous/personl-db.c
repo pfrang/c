@@ -13,7 +13,7 @@ const char NAMES[4][7] = {"Fjansk", "Espen", "Turid", "Skjan"};
 
 struct database_info {
   int employee_number;
-  char employee_name[50];
+  char employee_name[7];
   int ssn;
 };
 
@@ -23,10 +23,10 @@ int main(int argc, char *argv[]) {
     return -1;
   }
   int fd = open(argv[1], O_RDWR | O_CREAT | O_TRUNC, 0644);
-  char buffer[50];
-  sprintf(buffer, "Emplyee number\tEmployee name\tssn\n");
+  char *buffer = "Emplyee number\tEmployee name\tssn\n";
   write(fd, buffer, strlen(buffer));
 
+  struct database_info db;
   for (int i = 0; i < 10; i++) {
     int employee_number = random_int();
     char nameBuffer[50];
@@ -35,6 +35,9 @@ int main(int argc, char *argv[]) {
     char buffer[100] = {0};
     buffer[0] = '\0';
     sprintf(buffer, "%d\t%s\t%d\n", employee_number, nameBuffer, ssn);
+    sscanf(buffer, "%d\t%s\t%d", &db.employee_number, db.employee_name,
+           &db.ssn);
+    printf("%d\t%s\t%d\n", db.employee_number, db.employee_name, db.ssn);
     write(fd, buffer, strlen(buffer));
   }
   // Move the read position back to the start of the file
@@ -43,9 +46,11 @@ int main(int argc, char *argv[]) {
   // Read from the file and print out the contents
   char readBuffer[101]; // Buffer to hold the data read from the file
   ssize_t bytesRead;    // Number of bytes read from the file
+  printf("---OUTPUT FROM FILE---\n");
   while ((bytesRead = read(fd, readBuffer, 100)) > 0) {
     readBuffer[bytesRead] = '\0'; // Null-terminate the string
-    printf("%s", readBuffer);     // Print the string
+    printf("%s\n", readBuffer);   // Print the string
+    printf("%d\t%s\t%d\n", db.employee_number, db.employee_name, db.ssn);
   }
 
   if (bytesRead == -1) {
