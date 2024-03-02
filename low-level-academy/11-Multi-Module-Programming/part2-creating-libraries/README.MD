@@ -1,7 +1,6 @@
 A program can be compiled as a shared object, .so or a static object, .o
 
-
-
+THese are called libraries which can both be static or shared
 
 STATIC OBJECT
  - will increase the ELF, but everythign will be compiled into one ELF
