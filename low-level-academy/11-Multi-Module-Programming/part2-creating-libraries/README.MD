@@ -28,5 +28,5 @@ Compile process:
 
 Lets add this library to default place it searces for in /usr/lib
 
-  - sudo mv (or cp) libtee.so /usr/lib
+  - INSTALL the lib: sudo mv (or cp) libtee.so /usr/lib
   - Now simply run ./main and it doesnt need the env
