@@ -5,6 +5,8 @@
 
 int main() {
   int h = 0;
+  int g = 2;
+
   int d = 3;
   return h + d;
 }
