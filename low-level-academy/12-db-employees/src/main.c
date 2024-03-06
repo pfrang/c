@@ -4,6 +4,7 @@
 
 #include "../include/common.h"
 #include "../include/file.h"
+#include "../include/parse.h"
 // #include "common.h"
 // #include "file.h"
 // #include "parse.h"
@@ -21,6 +22,8 @@ int main(int argc, char *argv[]) {
   bool newfile = false;
   int c;
   int dbfd = -1; // so we dont actually use it as a valid file descriptor
+
+  struct dbheader_t *dbhdr = NULL;
 
   while ((c = getopt(argc, argv, "nf:")) != -1) { // if n or f is added
     switch (c) {
@@ -51,16 +54,28 @@ int main(int argc, char *argv[]) {
       perror("Unable to create db file\n");
       return -1;
     }
+
+    if (create_db_header(dbfd, &dbhdr) == STATUS_ERROR) {
+      printf("Failed to create db header\n");
+      return -1;
+    }
   } else {
     dbfd = open_db_file(filepath);
     if (dbfd == STATUS_ERROR) {
       perror("Unable to open db file\n");
       return -1;
     }
+
+    if (validate_db_header(dbfd, &dbhdr) == STATUS_ERROR) {
+      printf("Failed to validate database header\n");
+      return -1;
+    }
   }
 
   printf("Newfile %d\n", newfile);
   printf("Filepath: %s\n", filepath);
+
+  output_file(dbfd, dbhdr);
 
   return 0;
 }
