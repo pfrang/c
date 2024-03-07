@@ -2,7 +2,6 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -28,6 +27,7 @@ void output_file(int fd, struct dbheader_t *dbhdr) {
 
   return;
 }
+
 int validate_db_header(int fd, struct dbheader_t **headerOut) {
   if (fd < 0) {
     printf("Got a bad FD from the user \n");
@@ -75,6 +75,7 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
   }
 
   *headerOut = header;
+  return STATUS_SUCCESS;
 }
 
 int create_db_header(int fd, struct dbheader_t **headerOut) {
