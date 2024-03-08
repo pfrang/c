@@ -9,6 +9,12 @@
 #include "../include/common.h"
 #include "../include/parse.h"
 
+int read_employees(int fd, struct dbheader_t *, struct employee_t **employeesOut) {
+  if(fd==-1) {
+    printf("Bad file descriptir \n");
+    return STATUS_ERROR;
+  }
+}
 void output_file(int fd, struct dbheader_t *dbhdr) {
   if (fd < 0) {
     printf("Got a bad FD from the user \n");
