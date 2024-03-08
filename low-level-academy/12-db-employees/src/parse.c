@@ -9,8 +9,9 @@
 #include "../include/common.h"
 #include "../include/parse.h"
 
-int read_employees(int fd, struct dbheader_t *, struct employee_t **employeesOut) {
-  if(fd==-1) {
+int read_employees(int fd, struct dbheader_t *,
+                   struct employee_t **employeesOut) {
+  if (fd == -1) {
     printf("Bad file descriptir \n");
     return STATUS_ERROR;
   }
