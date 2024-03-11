@@ -24,6 +24,7 @@ int main(int argc, char *argv[]) {
   int dbfd = -1; // so we dont actually use it as a valid file descriptor
 
   struct dbheader_t *dbhdr = NULL;
+  struct employee_t *employees = NULL;
 
   while ((c = getopt(argc, argv, "nf:")) != -1) { // if n or f is added
     switch (c) {
@@ -70,6 +71,11 @@ int main(int argc, char *argv[]) {
       printf("Failed to validate database header\n");
       return -1;
     }
+  }
+
+  if (read_employees(dbfd, dbhdr, &employees) != STATUS_SUCCESS) {
+    printf("Failed to read employees\n");
+    return 0;
   }
 
   printf("Newfile %d\n", newfile);
