@@ -1,6 +1,7 @@
 #include <getopt.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "../include/common.h"
 #include "../include/file.h"
@@ -19,6 +20,7 @@ void print_usage(char *argv[]) {
 
 int main(int argc, char *argv[]) {
   char *filepath = NULL;
+  char *addstring = NULL;
   bool newfile = false;
   int c;
   int dbfd = -1; // so we dont actually use it as a valid file descriptor
@@ -26,7 +28,8 @@ int main(int argc, char *argv[]) {
   struct dbheader_t *dbhdr = NULL;
   struct employee_t *employees = NULL;
 
-  while ((c = getopt(argc, argv, "nf:")) != -1) { // if n or f is added
+  while ((c = getopt(argc, argv, "nf:a:")) !=
+         -1) { // if n or f is added. with : here means it contains data
     switch (c) {
     case 'n':
       newfile = true;
@@ -34,6 +37,11 @@ int main(int argc, char *argv[]) {
     case 'f':
       filepath = optarg; // return value from getopt and what the command line
                          // argument was after flag
+      break;
+    case 'a':
+      addstring = optarg; // The goal is to run the program ./bin/dview -f
+                          // mynewdb.db -a "Tim, 123 street, 120"
+
       break;
     case '?':
       printf("Unknown option -%c\n", c);
@@ -78,10 +86,14 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
-  printf("Newfile %d\n", newfile);
-  printf("Filepath: %s\n", filepath);
+  if (addstring) {
+    dbhdr->count++;
+    employees = realloc(employees, dbhdr->count * (sizeof(struct employee_t)));
 
-  output_file(dbfd, dbhdr);
+    add_employee(dbhdr, employees, addstring);
+  }
+
+  output_file(dbfd, dbhdr, employees);
 
   return 0;
 }
