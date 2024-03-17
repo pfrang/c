@@ -11,6 +11,45 @@
 
 #include "../include/common.h"
 
+int remove_employee(int fd, struct dbheader_t *dbhdr,
+                    struct employee_t *employees, char *name) {
+  if (fd < 0) {
+    printf("Bad file descripton\n");
+    return STATUS_ERROR;
+  }
+
+  int realcount = dbhdr->count;
+
+  int i = 0;
+  for (; i < realcount; i++) {
+
+    if (strcmp(employees[i].name, name) == 0) {
+      printf("Foudn match with %s at row %d\n", employees[i].name, i + 1);
+      printf("Deleting...\n");
+      for (int j = i; j < realcount - 1; j++) {
+        employees[j] = employees[j + 1];
+      }
+
+      dbhdr->count--;
+
+      dbhdr->filesize -= sizeof(struct employee_t);
+
+      lseek(fd, 0, SEEK_SET);
+
+      write(fd, dbhdr, sizeof(struct dbheader_t));
+
+      write(fd, employees, dbhdr->count * sizeof(struct employee_t));
+
+      if (ftruncate(fd, dbhdr->filesize) == -1) {
+        perror("ftruncte");
+        return STATUS_ERROR;
+      }
+      return STATUS_SUCCESS;
+    }
+  }
+
+  return STATUS_ERROR;
+}
 // Run with ./bin/dbview -f mynewdb.db -l
 // or add together ./bin/dbview -f mynewdb.db -l -a "Espen, Oppland 123, 150"
 void list_employees(struct dbheader_t *dbhdr, struct employee_t *employees) {

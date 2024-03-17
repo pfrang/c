@@ -15,17 +15,19 @@ void print_usage(char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-  char *filepath = NULL;
-  char *addstring = NULL;
   bool newfile = false;
   bool list = false;
+  bool remove = false;
+  char *removestring = NULL;
+  char *filepath = NULL;
+  char *addstring = NULL;
   int c;
   int dbfd = -1; // so we dont actually use it as a valid file descriptor
 
   struct dbheader_t *dbhdr = NULL;
   struct employee_t *employees = NULL;
 
-  while ((c = getopt(argc, argv, "nf:a:l")) !=
+  while ((c = getopt(argc, argv, "nf:a:lr:")) !=
          -1) { // if n or f is added. with : here means it contains data
     switch (c) {
     case 'n':
@@ -41,6 +43,10 @@ int main(int argc, char *argv[]) {
       break;
     case 'l':
       list = true;
+      break;
+    case 'r':
+      remove = true;
+      removestring = optarg;
       break;
     case '?':
       printf("Unknown option -%c\n", c);
@@ -96,6 +102,9 @@ int main(int argc, char *argv[]) {
     list_employees(dbhdr, employees);
   }
 
+  if (remove) {
+    remove_employee(dbfd, dbhdr, employees, removestring);
+  }
   output_file(dbfd, dbhdr, employees);
 
   return 0;
