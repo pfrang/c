@@ -11,6 +11,17 @@
 
 #include "../include/common.h"
 
+// Run with ./bin/dbview -f mynewdb.db -l
+// or add together ./bin/dbview -f mynewdb.db -l -a "Espen, Oppland 123, 150"
+void list_employees(struct dbheader_t *dbhdr, struct employee_t *employees) {
+  int i = 0;
+  for (; i < dbhdr->count; i++) {
+    printf("Employee %d\n", i);
+    printf("\tName: %s\n", employees[i].name);
+    printf("\tAddress: %s\n", employees[i].address);
+    printf("\tHours: %d\n", employees[i].hours);
+  }
+}
 int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees,
                  char *addstring) {
   printf("%s\n", addstring);
@@ -31,10 +42,11 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees,
   strncpy(employees[dbhdr->count - 1].address, addr,
           sizeof(employees[dbhdr->count - 1].address));
 
-  employees[dbhdr->count].hours = atoi(hours); // To convert string to int
+  employees[dbhdr->count - 1].hours = atoi(hours); // To convert string to int
 
   return STATUS_SUCCESS;
 }
+
 int read_employees(int fd, struct dbheader_t *dbhdr,
                    struct employee_t **employeesOut) {
   if (fd < 0) {

@@ -6,11 +6,7 @@
 #include "../include/common.h"
 #include "../include/file.h"
 #include "../include/parse.h"
-// #include "common.h"
-// #include "file.h"
-// #include "parse.h"
-//
-// the program can be run with the flag -n filepath or -h
+
 void print_usage(char *argv[]) {
   printf("Usage: %s -n -f <db file>\n", argv[0]);
   printf("\t -n - create new db file\n");
@@ -22,13 +18,14 @@ int main(int argc, char *argv[]) {
   char *filepath = NULL;
   char *addstring = NULL;
   bool newfile = false;
+  bool list = false;
   int c;
   int dbfd = -1; // so we dont actually use it as a valid file descriptor
 
   struct dbheader_t *dbhdr = NULL;
   struct employee_t *employees = NULL;
 
-  while ((c = getopt(argc, argv, "nf:a:")) !=
+  while ((c = getopt(argc, argv, "nf:a:l")) !=
          -1) { // if n or f is added. with : here means it contains data
     switch (c) {
     case 'n':
@@ -41,7 +38,9 @@ int main(int argc, char *argv[]) {
     case 'a':
       addstring = optarg; // The goal is to run the program ./bin/dview -f
                           // mynewdb.db -a "Tim, 123 street, 120"
-
+      break;
+    case 'l':
+      list = true;
       break;
     case '?':
       printf("Unknown option -%c\n", c);
@@ -91,6 +90,10 @@ int main(int argc, char *argv[]) {
     employees = realloc(employees, dbhdr->count * (sizeof(struct employee_t)));
 
     add_employee(dbhdr, employees, addstring);
+  }
+
+  if (list) {
+    list_employees(dbhdr, employees);
   }
 
   output_file(dbfd, dbhdr, employees);
