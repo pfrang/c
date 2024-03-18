@@ -10,6 +10,47 @@
 #include <unistd.h>
 
 #include "../include/common.h"
+int update_employee(int fd, struct dbheader_t *dbhdr,
+                    struct employee_t *employees) {
+
+  if (fd < 0) {
+    printf("Bad file descripton\n");
+    return STATUS_ERROR;
+  }
+
+  printf("What employee do you want to update`?\n");
+  printf("> ");
+  char name[256];
+
+  scanf("%s", name);
+
+  int realcount = dbhdr->count;
+
+  int i = 0;
+  for (; i < realcount; i++) {
+
+    if (strcmp(employees[i].name, name) == 0) {
+      printf("Foudn match with %s at row %d\n", employees[i].name, i + 1);
+      unsigned int hoursToUpdate = 0;
+
+      printf("With how many hours?\n");
+
+      scanf("%d", &hoursToUpdate);
+      printf("Setting %s to %d hours\n", name, hoursToUpdate);
+
+      employees[i].hours = hoursToUpdate;
+      lseek(fd, 0, SEEK_SET);
+
+      write(fd, dbhdr, sizeof(struct dbheader_t));
+
+      write(fd, employees, dbhdr->count * sizeof(struct employee_t));
+
+      return STATUS_SUCCESS;
+    }
+  }
+  printf("Did not find any employee with that name?\n");
+  return STATUS_ERROR;
+}
 
 int remove_employee(int fd, struct dbheader_t *dbhdr,
                     struct employee_t *employees, char *name) {

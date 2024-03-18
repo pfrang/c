@@ -18,6 +18,7 @@ int main(int argc, char *argv[]) {
   bool newfile = false;
   bool list = false;
   bool remove = false;
+  bool update = false;
   char *removestring = NULL;
   char *filepath = NULL;
   char *addstring = NULL;
@@ -27,7 +28,7 @@ int main(int argc, char *argv[]) {
   struct dbheader_t *dbhdr = NULL;
   struct employee_t *employees = NULL;
 
-  while ((c = getopt(argc, argv, "nf:a:lr:")) !=
+  while ((c = getopt(argc, argv, "nf:a:lr:u")) !=
          -1) { // if n or f is added. with : here means it contains data
     switch (c) {
     case 'n':
@@ -47,6 +48,9 @@ int main(int argc, char *argv[]) {
     case 'r':
       remove = true;
       removestring = optarg;
+      break;
+    case 'u':
+      update = true;
       break;
     case '?':
       printf("Unknown option -%c\n", c);
@@ -100,6 +104,10 @@ int main(int argc, char *argv[]) {
 
   if (list) {
     list_employees(dbhdr, employees);
+  }
+
+  if (update) {
+    update_employee(dbfd, dbhdr, employees);
   }
 
   if (remove) {

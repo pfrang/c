@@ -27,4 +27,5 @@ int read_employees(int fd, struct dbheader_t *,
 void output_file(int fd, struct dbheader_t *, struct employee_t *);
 int remove_employee(int fd, struct dbheader_t *, struct employee_t *,
                     char *name);
+int update_employee(int fd, struct dbheader_t *, struct employee_t *);
 #endif
