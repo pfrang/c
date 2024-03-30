@@ -1,6 +1,7 @@
 {
   "files.associations": {
     "*.css": "tailwindcss",
-    "in.h": "c"
+    "in.h": "c",
+    "uintn-identity.h": "c"
   }
 }

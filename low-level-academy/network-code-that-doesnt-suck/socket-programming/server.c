@@ -1,8 +1,33 @@
+#include <netinet/in.h>
 #include <stdio.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 
-#include <netinet/in.h>
+typedef enum {
+  PROTO_HELLO,
+} proto_type_e;
+
+// TLV - how big the data is and the type
+typedef struct {
+  proto_type_e type;
+  unsigned short len;
+} proto_hdr_t;
+
+void handle_client(int fd) {
+  char buf[4096] = {0};
+  proto_hdr_t *hdr = buf;
+  hdr->type = htonl(PROTO_HELLO);
+  hdr->len = htons(sizeof(int));
+  int reallen = hdr->len;
+  hdr->len = htons(hdr->len);
+
+  int *data = (int *)&hdr[1];
+  *data = htonl(1);
+
+  write(fd, hdr, sizeof(proto_hdr_t) + reallen);
+}
+
 int main() {
 
   struct sockaddr_in serverInfo = {0};
@@ -35,14 +60,19 @@ int main() {
     return -1;
   }; // Second argument is how many processes it can put in baclog. 0 means
      // unlimited
-  // accept
-  int cfd = accept(serverSocket, (struct sockaddr *)&clientInfo, &clientSize);
-  printf("Hei");
-  if (cfd == -1) {
-    perror("accept");
-    close(serverSocket);
-    return -1;
-  }
 
-  close(cfd);
+  while (1) {
+    int cfd = accept(serverSocket, (struct sockaddr *)&clientInfo, &clientSize);
+
+    if (cfd == -1) {
+      perror("accept");
+      close(serverSocket);
+      return -1;
+    }
+
+    handle_client(cfd);
+
+    close(cfd);
+  }
+  // accept
 }
