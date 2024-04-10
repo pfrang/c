@@ -39,6 +39,7 @@ int main() {
         close(socketServer);
         return -1;
     }
+
     printf("Socketserver is now listening on port %d\n", ntohs(serverInfo.sin_port));
 
     while (1) {
