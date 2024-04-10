@@ -11,7 +11,7 @@
 #define MAX_CLIENTS 2
 struct client_state {
     int fd;
-    char *buff[4069];
+    char buff[4069];
 };
 
 struct client_state clientState[MAX_CLIENTS];
