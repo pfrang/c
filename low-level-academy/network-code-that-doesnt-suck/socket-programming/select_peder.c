@@ -8,154 +8,99 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define MAX_CLIENTS 2
-struct client_state {
-    int fd;
-    char buff[4069];
-};
+#define PORT 8080
 
-struct client_state clientState[MAX_CLIENTS];
-void init_clients() {
-    for (int i = 0; i < MAX_CLIENTS; i++) {
-        clientState[i].fd = -1;
-        memset(clientState[i].buff, '\0', sizeof(clientState[i].buff));
+void initialize_server(int *serverSocket) {
+    struct sockaddr_in server_client;
+
+    server_client.sin_family = AF_INET;
+    server_client.sin_addr.s_addr = INADDR_ANY;
+    server_client.sin_port = htons(PORT);
+
+    if ((*serverSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        perror("socket");
+        exit(EXIT_FAILURE);
     }
+    if (bind(*serverSocket, (struct sockaddr *)&server_client, sizeof(server_client)) == -1) {
+        perror("bind");
+        exit(EXIT_FAILURE);
+    }
+
+    // Listen
+    if (listen(*serverSocket, 10) == -1) {
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Server listening on port %d\n", PORT);
 }
 
-void update_fds(int *nfds, int *clientFd, fd_set *read_fds) {
+int main() {
+    fd_set readfds;
+    int serverSocket, fd1 = -1, fd2 = -1, nfds;
+    socklen_t addrlen;
+    struct sockaddr_in client1, client2;
+    char buffer[1024];
+    initialize_server(&serverSocket);
 
-    // Find an empty slot for the new client
-    for (int i = 0; i < MAX_CLIENTS; i++) {
-        if (clientState[i].fd == -1) {
-            clientState[i].fd = *clientFd;
-            break;
-        }
-    }
-
-    for (int i = 0; i < MAX_CLIENTS; i++) {
-        if (clientState[i].fd != -1) {
-            FD_SET(clientState[i].fd, read_fds);
-            if (clientState[i].fd >= *nfds) {
-                *nfds = clientState[i].fd + 1;
-            }
-        }
-    }
-}
-
-void read_from_fds(int nfds, int serverSocket, fd_set *read_fds) {
-
-    for (int fd = 0; fd < nfds; fd++) {
-        if (FD_ISSET(fd, read_fds) && fd != serverSocket) {
-            for (int i = 0; i < MAX_CLIENTS; i++) {
-                if (clientState[i].fd == fd) {
-
-                    char buffer[4096];
-                    ssize_t bytesRead;
-
-                    // With 2 lines below only, it will only read first buffer sent
-                    // read(clientFd, buffer, sizeof(buffer));
-                    // printf("Received data from client %s\n", buffer);
-                    // Continuously read data until there's nothing left
-                    while ((bytesRead = read(clientState[i].fd, buffer, sizeof(buffer))) > 0) {
-                        printf("Received data from client %s\n", buffer);
-                        // Process the received data here as needed
-                    }
-
-                    if (bytesRead == -1) {
-                        perror("read");
-                        close(clientState[i].fd);
-                        continue;
-                    } else if (bytesRead == 0) {
-                        // Client disconnected
-                        printf("Client %d disconnected\n", fd);
-                        close(clientState[i].fd);
-                        FD_CLR(clientState[i].fd, read_fds);
-                        clientState[i].fd = -1; // Reset the client state
-                    }
+    // Wait for input on either socket
+    while (1) {
+        FD_ZERO(&readfds);
+        FD_SET(serverSocket, &readfds);
+        if (fd1 != -1)
+            FD_SET(fd1, &readfds);
+        if (fd2 != -1)
+            FD_SET(fd2, &readfds);
+        nfds = (fd1 > fd2 ? fd1 : fd2);
+        nfds = (serverSocket > nfds ? serverSocket : nfds) + 1;
+        printf("server socket %d\n", serverSocket);
+        if (select(nfds, &readfds, NULL, NULL, NULL) > 0) {
+            if (FD_ISSET(serverSocket, &readfds)) {
+                int newfd;
+                struct sockaddr_in newclient;
+                addrlen = sizeof(newclient);
+                // Check for any new connection
+                if ((newfd = accept(serverSocket, (struct sockaddr *)&newclient, &addrlen)) == -1) {
+                    perror("accept");
+                    continue;
+                }
+                if (fd1 == -1) {
+                    fd1 = newfd;
+                    client1 = newclient;
+                    printf("New connection on fd %d from port %d\n", fd1, ntohs(client1.sin_port));
+                } else if (fd2 == -1) {
+                    fd2 = newfd;
+                    client2 = newclient;
+                    printf("New connection on fd %d from port %d\n", fd2, ntohs(client2.sin_port));
+                } else {
+                    printf("Server is full\n");
+                    close(newfd); // Close the new connection immediately
                 }
             }
-        }
-    }
-}
-
-int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        printf("Usage: %s <port>\n", argv[0]);
-        exit(EXIT_FAILURE);
-    }
-
-    int nfds, clientFd;
-    fd_set read_fds, write_fds;
-
-    int port = atoi(argv[1]);
-
-    if (port < 0) {
-        perror("atoi");
-        exit(EXIT_FAILURE);
-    }
-    init_clients();
-
-    struct sockaddr_in serverInfo, clientInfo;
-
-    socklen_t clientSize = sizeof(clientInfo);
-
-    memset(&serverInfo, 0, sizeof(serverInfo));
-    serverInfo.sin_addr.s_addr = 0; // Any address
-    serverInfo.sin_port = htons(port);
-    serverInfo.sin_family = AF_INET;
-
-    int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (serverSocket == -1) {
-        perror("socket");
-        close(serverSocket);
-        exit(EXIT_FAILURE);
-    }
-
-    if (bind(serverSocket, (struct sockaddr *)&serverInfo, sizeof(serverInfo)) == -1) {
-        perror("bind");
-        close(serverSocket);
-        exit(EXIT_FAILURE);
-    }
-
-    if (listen(serverSocket, 10) == -1) {
-        perror("listen");
-        close(serverSocket);
-        exit(EXIT_FAILURE);
-    }
-
-    printf("Server listening on port %d\n", port);
-
-    while (1) {
-        FD_ZERO(&read_fds);
-        FD_ZERO(&write_fds);
-
-        FD_SET(serverSocket, &read_fds);
-
-        nfds = serverSocket + 1;
-
-        if (select(nfds, &read_fds, &write_fds, NULL, NULL) == -1) {
-            perror("select");
-            close(serverSocket);
-            exit(EXIT_FAILURE);
-        }
-
-        // This basically update_fds
-        if (FD_ISSET(serverSocket, &read_fds)) {
-
-            if ((clientFd = accept(serverSocket, (struct sockaddr *)&clientInfo, &clientSize)) == -1) {
-                perror("accept");
-                continue;
+            if (fd1 != -1 && FD_ISSET(fd1, &readfds)) {
+                memset(buffer, 0, sizeof(buffer));
+                if (read(fd1, buffer, sizeof(buffer)) > 0) {
+                    printf("Received from fd1, %d: %s\n", fd1, buffer);
+                } else {
+                    close(fd1);
+                    printf("Client on fd1, %d, disconnected with addr %s\n", fd1, inet_ntoa(client1.sin_addr));
+                    fd1 = -1;
+                }
             }
 
-            printf("New connection from %s, from port %d\n", inet_ntoa(clientInfo.sin_addr),
-                   ntohs(clientInfo.sin_port));
-
-            update_fds(&nfds, &clientFd, &read_fds);
+            if (fd2 != -1 && FD_ISSET(fd2, &readfds)) {
+                memset(buffer, 0, sizeof(buffer));
+                if (read(fd2, buffer, sizeof(buffer)) > 0) {
+                    printf("Received from fd2, %d,: %s\n", fd2, buffer);
+                } else {
+                    close(fd2);
+                    printf("Client on fd2, %d, disconnected with addr %s\n", fd2, inet_ntoa(client2.sin_addr));
+                    fd2 = -1;
+                }
+            }
+        } else {
+            perror("select");
+            printf("Something bad happened");
         }
-
-        read_from_fds(nfds, serverSocket, &read_fds);
     }
-
-    close(serverSocket);
-    return 0;
 }
