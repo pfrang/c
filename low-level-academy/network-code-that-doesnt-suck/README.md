@@ -22,3 +22,7 @@ The server has to be setup such that it listens for requests
 Client
  - Socket
  - Client
+
+
+
+SELECT - a function that allows for multiple clients to connect on a single thread. Select will monitor the given FDS and allow for I/O on those fds
