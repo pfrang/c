@@ -5,18 +5,17 @@
 #include <string.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #define PORT 8080
 #define MAX_CLIENTS 1000
-
 int main() {
-    int listen_fd, nfds, conn_fd;
-    struct sockaddr_in client_addr, server_addr;
-    // socket
+    int conn_fd;
+
+    struct sockaddr_in server_addr, client_addr;
+
     socklen_t clientSize = sizeof(client_addr);
-    listen_fd = socket(AF_INET, SOCK_STREAM, 0);
+    int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
 
     if (listen_fd == -1) {
         perror("socket");
@@ -40,14 +39,12 @@ int main() {
     printf("Server listening on port %d\n", PORT);
 
     struct pollfd fds[MAX_CLIENTS];
-
     memset(fds, 0, sizeof(fds));
     fds[0].fd = listen_fd;
     fds[0].events = POLLIN;
-    nfds = 1;
+    int nfds = 2;
 
     while (1) {
-
         int n_events = poll(fds, nfds, -1);
         if (n_events == -1) {
             perror("poll");
@@ -86,6 +83,5 @@ int main() {
             }
         }
     }
-
     return 0;
 }
