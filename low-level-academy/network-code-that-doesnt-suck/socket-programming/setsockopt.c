@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <asm-generic/socket.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,17 +9,25 @@
 #include <unistd.h>
 
 #define PORT 8080
-#define MAX_CLIENTS 1000
+
 int main() {
-    int conn_fd;
-
-    struct sockaddr_in server_addr, client_addr;
-
+    int listen_fd, nfds, conn_fd;
+    struct sockaddr_in client_addr, server_addr;
+    int opt = -1;
+    // socket
     socklen_t clientSize = sizeof(client_addr);
-    int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
+    listen_fd = socket(AF_INET, SOCK_STREAM, 0);
 
     if (listen_fd == -1) {
         perror("socket");
+        exit(EXIT_FAILURE);
+    }
+
+    // setsockopt function is particularly important for controlling the behavior of sockets at a lower level
+    // enabling features like address reuse, time-out adjustments, and buffer size modifications.
+
+    if (setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
+        perror("setsockopt");
         exit(EXIT_FAILURE);
     }
 
@@ -38,13 +47,15 @@ int main() {
 
     printf("Server listening on port %d\n", PORT);
 
-    struct pollfd fds[MAX_CLIENTS];
+    struct pollfd fds[10];
+
     memset(fds, 0, sizeof(fds));
     fds[0].fd = listen_fd;
     fds[0].events = POLLIN;
-    int nfds = 2;
+    nfds = 1;
 
     while (1) {
+
         int n_events = poll(fds, nfds, -1);
         if (n_events == -1) {
             perror("poll");
@@ -83,5 +94,6 @@ int main() {
             }
         }
     }
+
     return 0;
 }
