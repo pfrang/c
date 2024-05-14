@@ -1,3 +1,4 @@
+#include <bits/getopt_core.h>
 #include <getopt.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -14,17 +15,19 @@ void print_usage(char *argv[]) {
     return;
 }
 
+void poll_loop(unsigned short port, struct dbheader_t *dbhdr, struct employee_t *employees) {}
+
 int main(int argc, char *argv[]) {
     bool newfile = false;
     bool list = false;
-    bool remove = false;
-    bool update = false;
     char *removestring = NULL;
+    unsigned short port = 0;
     char *filepath = NULL;
     char *addstring = NULL;
+    char *portarg = NULL;
     int c;
-    int dbfd = -1; // so we dont actually use it as a valid file descriptor
 
+    int dbfd = -1; // so we dont actually use it as a valid file descriptor
     struct dbheader_t *dbhdr = NULL;
     struct employee_t *employees = NULL;
 
@@ -37,19 +40,12 @@ int main(int argc, char *argv[]) {
             filepath = optarg; // return value from getopt and what the command line
                                // argument was after flag
             break;
-        case 'a':
-            addstring = optarg; // The goal is to run the program ./bin/dview -f
-                                // mynewdb.db -a "Tim, 123 street, 120"
-            break;
-        case 'l':
-            list = true;
-            break;
-        case 'r':
-            remove = true;
-            removestring = optarg;
-            break;
-        case 'u':
-            update = true;
+        case 'p':
+            portarg = optarg;
+            port = atoi(portarg);
+            if (port == 0) {
+                printf("Bad port: %s\n", optarg);
+            }
             break;
         case '?':
             printf("Unknown option -%c\n", c);
@@ -105,13 +101,6 @@ int main(int argc, char *argv[]) {
         list_employees(dbhdr, employees);
     }
 
-    if (update) {
-        update_employee(dbfd, dbhdr, employees);
-    }
-
-    if (remove) {
-        remove_employee(dbfd, dbhdr, employees, removestring);
-    }
     output_file(dbfd, dbhdr, employees);
 
     return 0;
