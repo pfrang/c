@@ -4,6 +4,7 @@
     "cstdio": "c",
     "stdio.h": "c",
     "common.h": "c",
-    "libtee.h": "c"
+    "libtee.h": "c",
+    "parse.h": "c"
   }
 }
