@@ -38,7 +38,7 @@ void poll_loop(unsigned short port, struct dbheader_t *dbhdr, struct employee_t 
     int opt = 1;
 
     // Initialize client states
-    init_clients(&clientStates);
+    init_clients(clientStates);
 
     if ((listen_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         perror("socket");
