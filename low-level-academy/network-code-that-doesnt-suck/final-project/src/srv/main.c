@@ -69,7 +69,7 @@ void poll_loop(unsigned short port, struct dbheader_t *dbhdr, struct employee_t 
         exit(EXIT_FAILURE);
     }
 
-    printf("Server listneing on port %d\n", PORT);
+    printf("Server listneing on port %d\n", port);
 
     memset(fds, 0, sizeof(fds));
     fds[0].fd = listen_fd;
