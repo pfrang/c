@@ -6,5 +6,6 @@
     "common.h": "c",
     "libtee.h": "c",
     "parse.h": "c"
-  }
+  },
+  "C_Cpp.errorSquiggles": "disabled"
 }

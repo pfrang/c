@@ -1,6 +1,7 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 int main() {
     int listen_fd, conn_fd;
@@ -43,6 +44,7 @@ int main() {
     socklen_t cliaddr_len = sizeof(cliaddr);
 
     while (1) {
+
         conn_fd = accept(listen_fd, (struct sockaddr *)&cliaddr, &cliaddr_len);
         if (conn_fd == -1) {
             perror("accept");
@@ -60,7 +62,7 @@ int main() {
 
         printf("Received: %s\n", buffer);
 
-        char *response = "HTTP/1.1 200 OK\nContent-Length: 12\n\nHello World!";
+        char *response = "HTTP/1.1 200 OK\nContent-Length: 12\n\nHello World!\n";
 
         n = write(conn_fd, response, strlen(response));
 
@@ -68,5 +70,7 @@ int main() {
             perror("write");
             return -1;
         }
+
+        close(conn_fd);
     }
 }

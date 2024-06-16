@@ -24,3 +24,6 @@ $(OBJ_SRV): src/server.c
 
 $(TARGET_CLI): $(OBJ_CLI)
 		gcc -o $@ $^
+
+$(OBJ_CLI): src/client.c
+		gcc -c $< -o $@ -Iinclude
