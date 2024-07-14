@@ -21,16 +21,15 @@ int main() {
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = INADDR_ANY;
     servaddr.sin_port = htons(8080);
-
-    if (bind(listen_fd, (struct sockaddr *)&servaddr, sizeof(servaddr)) == -1) {
-        perror("bind");
-        return -1;
-    }
-
     // setsockopt
 
     if (setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
         perror("setsockopt");
+        return -1;
+    }
+
+    if (bind(listen_fd, (struct sockaddr *)&servaddr, sizeof(servaddr)) == -1) {
+        perror("bind");
         return -1;
     }
 
@@ -60,7 +59,7 @@ int main() {
             return -1;
         }
 
-        printf("Received: %s\n", buffer);
+        printf("----------Received----------: \n%s\n", buffer);
 
         char *response = "HTTP/1.1 200 OK\nContent-Length: 12\n\nHello World!\n";
 
