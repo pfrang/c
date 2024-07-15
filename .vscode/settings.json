@@ -5,7 +5,10 @@
     "stdio.h": "c",
     "common.h": "c",
     "libtee.h": "c",
-    "parse.h": "c"
+    "parse.h": "c",
+    "cstdlib": "c",
+    "algorithm": "c",
+    "stdlib.h": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }
