@@ -12,12 +12,12 @@ void *thread_target(void *arg) {
     return NULL;
 }
 
-int main() {
+int main(int argc, char *argv) {
     pthread_t threads[THREAD_COUNT];
 
     int i = 0;
 
-    for (int i = 0; i < THREAD_COUNT; i++) {
+    for (i = 0; i < THREAD_COUNT; i++) {
         int *arg = malloc(sizeof(*arg)); // Allocate memory for the argument
         if (arg == NULL) {
             printf("Couldn't allocate memory for thread arg.\n");
