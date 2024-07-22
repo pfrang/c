@@ -12,6 +12,7 @@ typedef struct {
 
 void *thread_target(void *args) {
     thread_args *myargs = (thread_args *)args;
+    // Issue here is that multiple threads are accedsing the SAME memory (will not print 0 -9 consistently)
     printf("This is thread %d\n", myargs->thread_num);
     return NULL;
 }
