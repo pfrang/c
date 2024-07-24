@@ -1,22 +1,15 @@
-#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
-int *twoSum(int *nums, int numsSize, int target, int *returnSize) {
-    int *ptr;
-    int size = 2;
-    ptr = (int *)malloc(size * sizeof(int));
+void vulnerableFunction(char *input) {
+    char buffer[10];
+    strcpy(buffer, input); // This is where the overflow can occur
+    printf("Buffer content: %s\n", buffer);
+    gets(buffer);
+}
 
-    for (int i = 0; i < numsSize; i++) {
-        for (int j = i + 1; j < numsSize; j++) {
-            if (nums[i] + nums[j] == target) {
-                ptr[0] = i;
-                ptr[1] = j;
-                *returnSize = size;
-                return ptr;
-            }
-        }
-    }
-
-    // If no two numbers sum to the target, return NULL
-    *returnSize = 0;
-    return NULL;
+int main() {
+    char longInput[] = "This input is definitely too long for the buffer!";
+    vulnerableFunction(longInput);
+    return 0;
 }

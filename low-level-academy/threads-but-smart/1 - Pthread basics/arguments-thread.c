@@ -12,25 +12,22 @@ typedef struct {
 
 void *thread_target(void *args) {
     thread_args *myargs = (thread_args *)args;
-    // Issue here is that multiple threads are accedsing the SAME memory (will not print 0 -9 consistently)
     printf("This is thread %d\n", myargs->thread_num);
+    free(args); // Free the dynamically allocated memory
     return NULL;
 }
 
-int main(int argc, char *argv) {
+int main(int argc, char *argv[]) {
     pthread_t threads[THREAD_COUNT];
 
-    int i = 0;
+    for (int i = 0; i < THREAD_COUNT; i++) {
+        thread_args *arg = malloc(sizeof(thread_args)); // Dynamically allocate memory for thread arguments
 
-    thread_args arg;
+        arg->thread_num = i;
 
-    for (i = 0; i < THREAD_COUNT; i++) {
+        arg->message = "Hei";
 
-        arg.thread_num = i;
-
-        arg.message = "Hei";
-
-        if (pthread_create(&threads[i], NULL, thread_target, (void *)&arg) != 0) {
+        if (pthread_create(&threads[i], NULL, thread_target, (void *)arg) != 0) {
             printf("Error creating thread\n");
             return 1;
         }
