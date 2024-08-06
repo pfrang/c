@@ -1,0 +1,9 @@
+.section .text
+.global _start
+
+_start:
+    ldr r0, =#0x13377331
+    movw r1, 0xface
+    movt r1, 0xf00d
+    ldr r2, =#0xfacef00d
+    ldr r3, =#0x1111

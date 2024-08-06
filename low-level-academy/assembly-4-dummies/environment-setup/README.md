@@ -31,3 +31,16 @@ Run with GDB:
 It should look like this
 
 ![alt text](image.png)
+
+
+--- Registers
+ARM 32-bit processor have a set of 16 general-purpose registers, R0 to R15. These registers are used for various operations such as holding data, addresses, and temporary values during computations.
+
+register r0-r-12 are general purpose registers (does whatever)
+
+R0-R7: These registers are frequently used for various calculations and data manipulation.
+R8-R12: These registers are generally used for holding data that needs to persist across function calls.
+
+r13-r15 and CPSR have special purpose (special purpose registers)
+
+Dont mess with the r11-r15 registers

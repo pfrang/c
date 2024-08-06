@@ -1,0 +1,11 @@
+
+./st:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+000100b8 <_start>:
+   100b8:	e59f0004 	ldr	r0, [pc, #4]	; 100c4 <_start+0xc>
+   100bc:	e3a01020 	mov	r1, #32
+   100c0:	e5801000 	str	r1, [r0]
+   100c4:	000200c8 	.word	0x000200c8

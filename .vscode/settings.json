@@ -8,7 +8,8 @@
     "parse.h": "c",
     "cstdlib": "c",
     "algorithm": "c",
-    "stdlib.h": "c"
+    "stdlib.h": "c",
+    "cstring": "c",
   },
-  "C_Cpp.errorSquiggles": "disabled"
+  "C_Cpp.errorSquiggles": "enabled"
 }
