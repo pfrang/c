@@ -1,7 +1,6 @@
 
 #include "headers.h"
 #include <arpa/inet.h>
-#include <asm-generic/socket.h>
 #include <netinet/in.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -57,8 +56,8 @@ int main() {
 
     printf("UDP server listening on port %d...\n", PORT);
 
-    struct timeval start, end;
-    gettimeofday(&start, NULL); // Start timer
+    // struct timeval start, end;
+    // gettimeofday(&start, NULL); // Start timer
 
     while (1) {
 
@@ -122,13 +121,13 @@ int main() {
             memset(buff, 0, BUFF_SIZE);
         }
 
-        gettimeofday(&end, NULL); // End timer
-
-        long seconds = end.tv_sec - start.tv_sec;
-        long useconds = end.tv_usec - start.tv_usec;
-        long total_micro = seconds * 1000000 + useconds;
-
-        printf("Elapsed time: %.3f seconds\n", total_micro / 1e6);
+        // gettimeofday(&end, NULL); // End timer
+        //
+        // long seconds = end.tv_sec - start.tv_sec;
+        // long useconds = end.tv_usec - start.tv_usec;
+        // long total_micro = seconds * 1000000 + useconds;
+        //
+        // printf("Elapsed time: %.3f seconds\n", total_micro / 1e6);
     }
 
     close(server_fd);

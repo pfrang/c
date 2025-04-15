@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 int main(int argc, char *argv[]) {
@@ -35,6 +38,9 @@ int main(int argc, char *argv[]) {
         msg = "Hei hei";
     }
 
+    struct timeval start, end;
+    gettimeofday(&start, NULL); // Start timer
+
     for (int i = 0; i < 10; i++) {
         headerData.type = htonl(i + 1);
         headerData.ackno = htonl(11 - i);
@@ -52,4 +58,13 @@ int main(int argc, char *argv[]) {
         memset(buff, 0, BUFF_SIZE);
         sleep(1);
     }
+
+    gettimeofday(&end, NULL); // End timer
+
+    long seconds = end.tv_sec - start.tv_sec;
+    long useconds = end.tv_usec - start.tv_usec;
+    long total_micro = seconds * 1000000 + useconds;
+
+    printf("Elapsed time: %.3f seconds\n", total_micro / 1e6);
+    close(clientSocket);
 }
