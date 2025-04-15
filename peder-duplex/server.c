@@ -10,6 +10,8 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #define PORT 8080
 
@@ -78,15 +80,16 @@ int main() {
         // unpack(buff, rc);
         // memset(buff, 0, BUFF_SIZE);
         // to here
-
+        //
         struct timeval timeout;
         timeout.tv_sec = 5;
         timeout.tv_usec = 0;
 
         int activity = select(server_fd + 1, &readfds, NULL, NULL, &timeout);
-
+        while (waitpid(-1, NULL, WNOHANG) > 0)
+            ;
         if (activity < 0) {
-            perror("select erro");
+            perror("select error");
             close(server_fd);
             break;
         } else if (activity == 0) {
@@ -103,8 +106,19 @@ int main() {
                 perror("recvfrom error");
                 continue;
             }
-            printf("Client %s:%d sent:", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
-            unpack(buff, rc);
+            printf("Processing %s:%d.....\n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
+            pid_t pid = fork();
+            if (pid < 0) {
+                perror("fork() faild");
+                close(server_fd);
+                return -1;
+            } else if (pid > 0) {
+                printf("I am parent with pid %d\n", pid);
+            } else if (pid == 0) {
+                unpack(buff, rc);
+                printf("Now exiting child process\n");
+                exit(0);
+            }
             memset(buff, 0, BUFF_SIZE);
         }
 
@@ -114,7 +128,7 @@ int main() {
         long useconds = end.tv_usec - start.tv_usec;
         long total_micro = seconds * 1000000 + useconds;
 
-        printf("Elapsed time: %ld microseconds (%.3f seconds)\n", total_micro, total_micro / 1e6);
+        printf("Elapsed time: %.3f seconds\n", total_micro / 1e6);
     }
 
     close(server_fd);
