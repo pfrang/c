@@ -8,8 +8,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#define LENCONST 64
-
 int main(int argc, char *argv[]) {
 
     int clientSocket, wc;
