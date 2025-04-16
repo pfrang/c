@@ -1,0 +1,6 @@
+Compile server and client with make
+
+run server with ./server
+
+2x ./client
+Test the client by spinning up two instances and you can see it handles multiplexity

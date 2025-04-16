@@ -13,7 +13,7 @@
 #include "headers.h"
 
 int main(int argc, char *argv[]) {
-  int clientSocket, wc;
+  int clientSocket, wc, rc;
   char buff[BUFF_SIZE];
   struct sockaddr_in serverAddr;
 
@@ -56,7 +56,19 @@ int main(int argc, char *argv[]) {
 
     printf("Sent type:%d and ackno:%d with msg:%s\n", ntohl(headerData.type),
            ntohl(headerData.ackno), msg);
+
     memset(buff, 0, BUFF_SIZE);
+    rc = recvfrom(clientSocket, buff, BUFF_SIZE, 0,
+                  (struct sockaddr *)&serverAddr, sizeof(serverAddr));
+
+    if (rc < 0) {
+      perror("recvfrom error()");
+    }
+
+    printf("Received response: %s", buff);
+
+    memset(buff, 0, BUFF_SIZE);
+
     sleep(1);
   }
 
