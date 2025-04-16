@@ -6,10 +6,10 @@
 #define BUFF_SIZE 1024
 #define HEADER_SIZE 8
 
-enum AckNo { SYS, SYSACK, ACK };
+enum PacketType { DATA, ACK, RESET };
 struct MyHeader {
-  int type;
-  AckNo ackno;
+  enum PacketType type;
+  int ackno;
 };
 
 #endif

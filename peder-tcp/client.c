@@ -18,7 +18,6 @@ int main(int argc, char *argv[]) {
   struct sockaddr_in serverAddr;
 
   clientSocket = socket(AF_INET, SOCK_DGRAM, 0);
-
   if (clientSocket < 0) {
     perror("socket");
     exit(EXIT_FAILURE);
@@ -41,9 +40,10 @@ int main(int argc, char *argv[]) {
   struct timeval start, end;
   gettimeofday(&start, NULL);  // Start timer
 
+  socklen_t addr_len = sizeof(serverAddr);
   for (int i = 0; i < 10; i++) {
-    headerData.type = htonl(i + 1);
-    headerData.ackno = htonl(11 - i);
+    headerData.type = htonl(rand() % 3);
+    headerData.ackno = 0;
     memcpy(buff, &headerData, sizeof(headerData));
     memcpy(buff + sizeof(headerData), msg, strlen(msg) + 1);
 
@@ -59,17 +59,19 @@ int main(int argc, char *argv[]) {
 
     memset(buff, 0, BUFF_SIZE);
     rc = recvfrom(clientSocket, buff, BUFF_SIZE, 0,
-                  (struct sockaddr *)&serverAddr, sizeof(serverAddr));
+                  (struct sockaddr *)&serverAddr, &addr_len);
 
     if (rc < 0) {
       perror("recvfrom error()");
     }
 
-    printf("Received response: %s", buff);
+    printf("Received response: %s\n", buff);
 
+    memset(&headerData, 0, sizeof(headerData));
     memset(buff, 0, BUFF_SIZE);
 
     sleep(1);
+    printf("-----%d iteration finished------------\n", i);
   }
 
   gettimeofday(&end, NULL);  // End timer
