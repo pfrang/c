@@ -1,5 +1,6 @@
 
 #include <arpa/inet.h>
+#include <linux/limits.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,52 +30,84 @@ int main(int argc, char *argv[]) {
   serverAddr.sin_family = AF_INET;
   serverAddr.sin_port = htons(8080);
 
-  char *msg = calloc(0, BUFF_SIZE - HEADER_SIZE - 1);
+  char *msg = calloc(1, PAYLOAD_SIZE);
+  if (!msg) {
+    perror("calloc");
+    exit(0);
+  }
 
   if (argc == 2) {
-    msg = argv[1];
+    strncpy(msg, argv[1], PAYLOAD_SIZE);
   } else {
-    msg = "Hei hei";
+    strncpy(msg, "Some random data", PAYLOAD_SIZE);
   }
 
   struct timeval start, end;
-  gettimeofday(&start, NULL);  // Start timer
+  gettimeofday(&start, NULL); // Start timer
 
   socklen_t addr_len = sizeof(serverAddr);
-  for (int i = 0; i < 10; i++) {
-    headerData.type = htonl(rand() % 3);
-    headerData.ackno = 0;
-    memcpy(buff, &headerData, sizeof(headerData));
-    memcpy(buff + sizeof(headerData), msg, strlen(msg) + 1);
+  int receivedAck, receivedType;
+  for (int i = 0; i < 5; i++) {
+    printf("-----%d iteration starting------------\n", i);
 
-    wc = sendto(clientSocket, buff, sizeof(headerData) + strlen(msg) + 1, 0,
-                (struct sockaddr *)&serverAddr, sizeof(serverAddr));
+    memset(buff, 0, BUFF_SIZE);
+    headerData.type = htonl(ACK);
+    headerData.ackno = htonl(0);
+    memcpy(buff, &headerData, sizeof(headerData));
+    // Send ack
+    printf("Sending ack\n");
+    wc = sendto(clientSocket, buff, sizeof(headerData), 0, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
     if (wc < 0) {
       perror("sendto error");
       continue;
     }
 
-    printf("Sent type:%d and ackno:%d with msg:%s\n", ntohl(headerData.type),
-           ntohl(headerData.ackno), msg);
-
     memset(buff, 0, BUFF_SIZE);
-    rc = recvfrom(clientSocket, buff, BUFF_SIZE, 0,
-                  (struct sockaddr *)&serverAddr, &addr_len);
+    rc = recvfrom(clientSocket, buff, BUFF_SIZE, 0, (struct sockaddr *)&serverAddr, &addr_len);
 
     if (rc < 0) {
-      perror("recvfrom error()");
+      perror("recvfrom err()");
+      exit(0);
+    }
+    memcpy(&receivedType, buff, sizeof(int));
+    receivedType = ntohl(receivedType);
+    memcpy(&receivedAck, buff + sizeof(int), sizeof(int));
+    receivedAck = ntohl(receivedAck);
+    printf("Received response type %d and ack %d\n", receivedType, receivedAck);
+
+    if (receivedType != ACK) {
+      printf("Failed to receive ack, trying again\n");
+      continue;
     }
 
-    printf("Received response: %s\n", buff);
+    memset(buff, 0, BUFF_SIZE);
+
+    headerData.type = htonl(DATA);
+    headerData.ackno = htonl(receivedAck + 1);
+    memcpy(buff, &headerData, sizeof(headerData));
+
+    memcpy(buff + sizeof(headerData), msg, strlen(msg) + 1);
+
+    wc = sendto(clientSocket, buff, sizeof(headerData) + strlen(msg) + 1, 0, (struct sockaddr *)&serverAddr,
+                sizeof(serverAddr));
+
+    printf("Sent type:%d and ackno:%d with msg:%s\n", ntohl(headerData.type), ntohl(headerData.ackno), msg);
+
+    if (wc < 0) {
+      printf("sendto data err(), trying to re-establish\n");
+      continue;
+    }
+
+    printf("Data was sent: %s\n", msg);
 
     memset(&headerData, 0, sizeof(headerData));
     memset(buff, 0, BUFF_SIZE);
 
+    printf("-----%d iteration finished------------\n\n", i);
     sleep(1);
-    printf("-----%d iteration finished------------\n", i);
   }
 
-  gettimeofday(&end, NULL);  // End timer
+  gettimeofday(&end, NULL); // End timer
 
   long seconds = end.tv_sec - start.tv_sec;
   long useconds = end.tv_usec - start.tv_usec;
@@ -82,4 +115,5 @@ int main(int argc, char *argv[]) {
 
   printf("Elapsed time: %.3f seconds\n", total_micro / 1e6);
   close(clientSocket);
+  free(msg);
 }
