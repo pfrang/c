@@ -98,12 +98,14 @@ int main() {
 
       enum PacketType type;
       memcpy(&type, buff, sizeof(int));
+      int ackno;
+      memcpy(&ackno, buff + sizeof(int), sizeof(int));
 
       type = ntohl(type);
       printf("Processing %s:%d with type %d.....\n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port), type);
 
       switch (type) {
-      case DATA: {
+      case DATA &&ackno == 1: {
         // strncpy(res, "Data was received", PAYLOAD_SIZE - 1);
         // printf("Received data: %s\n\n", res);
         unpack(buff, BUFF_SIZE);
@@ -147,7 +149,7 @@ int main() {
       }
       case RESET: {
         printf("Received reset\n");
-        strncpy(res, "Reset was received", PAYLOAD_SIZE - 1);
+        strncpy(res, "Reset was received, nothins is done\n", PAYLOAD_SIZE - 1);
         break;
       }
       }
