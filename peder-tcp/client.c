@@ -1,5 +1,7 @@
 
 #include <arpa/inet.h>
+#include <asm-generic/socket.h>
+#include <errno.h>
 #include <linux/limits.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -24,6 +26,9 @@ int main(int argc, char *argv[]) {
     exit(EXIT_FAILURE);
   }
 
+  struct timeval timeout;
+  timeout.tv_sec = 1;
+  timeout.tv_usec = 0;
   struct MyHeader headerData;
 
   serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -36,18 +41,24 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
 
-  if (argc == 2) {
-    strncpy(msg, argv[1], PAYLOAD_SIZE);
-  } else {
-    strncpy(msg, "Some random data", PAYLOAD_SIZE);
-  }
-
   struct timeval start, end;
   gettimeofday(&start, NULL); // Start timer
 
   socklen_t addr_len = sizeof(serverAddr);
   int receivedAck, receivedType;
+
+  if (setsockopt(clientSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout,
+                 sizeof(timeout)) < 0) {
+    perror("setsockopt err()");
+    exit(0);
+  }
+
   for (int i = 0; i < 5; i++) {
+    if (argc == 2) {
+      strncpy(msg, argv[1], PAYLOAD_SIZE);
+    } else {
+      snprintf(msg, PAYLOAD_SIZE, "Some random data: %d\n", i);
+    }
     printf("-----%d iteration starting------------\n", i);
 
     memset(buff, 0, BUFF_SIZE);
@@ -56,18 +67,25 @@ int main(int argc, char *argv[]) {
     memcpy(buff, &headerData, sizeof(headerData));
     // Send ack
     printf("Sending ack\n");
-    wc = sendto(clientSocket, buff, sizeof(headerData), 0, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
+    wc = sendto(clientSocket, buff, sizeof(headerData), 0,
+                (struct sockaddr *)&serverAddr, sizeof(serverAddr));
     if (wc < 0) {
       perror("sendto error");
       continue;
     }
 
     memset(buff, 0, BUFF_SIZE);
-    rc = recvfrom(clientSocket, buff, BUFF_SIZE, 0, (struct sockaddr *)&serverAddr, &addr_len);
+    rc = recvfrom(clientSocket, buff, BUFF_SIZE, 0,
+                  (struct sockaddr *)&serverAddr, &addr_len);
 
     if (rc < 0) {
-      perror("recvfrom err()");
-      exit(0);
+      if (errno == EAGAIN || errno == EWOULDBLOCK) {
+        printf("Timeout occurred, didnt receive ACK in time, trying again!\n");
+        continue;
+      } else {
+        perror("recv error()");
+        exit(0);
+      }
     }
     memcpy(&receivedType, buff, sizeof(int));
     receivedType = ntohl(receivedType);
@@ -88,10 +106,11 @@ int main(int argc, char *argv[]) {
 
     memcpy(buff + sizeof(headerData), msg, strlen(msg) + 1);
 
-    wc = sendto(clientSocket, buff, sizeof(headerData) + strlen(msg) + 1, 0, (struct sockaddr *)&serverAddr,
-                sizeof(serverAddr));
+    wc = sendto(clientSocket, buff, sizeof(headerData) + strlen(msg) + 1, 0,
+                (struct sockaddr *)&serverAddr, sizeof(serverAddr));
 
-    printf("Sent type:%d and ackno:%d with msg:%s\n", ntohl(headerData.type), ntohl(headerData.ackno), msg);
+    printf("Sent type:%d and ackno:%d with msg:%s\n", ntohl(headerData.type),
+           ntohl(headerData.ackno), msg);
 
     if (wc < 0) {
       printf("sendto data err(), trying to re-establish\n");

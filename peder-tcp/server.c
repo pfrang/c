@@ -39,14 +39,6 @@ int main() {
 
   server_fd = socket(AF_INET, SOCK_DGRAM, 0);
 
-  int opt = 1;
-
-  // if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt,
-  // sizeof(opt))) {
-  //     perror("setsockopt");
-  //     exit(EXIT_FAILURE);
-  // }
-
   memset(&serverAddr, 0, sizeof(serverAddr));
   serverAddr.sin_port = htons(8080);
   serverAddr.sin_family = AF_INET;
@@ -64,103 +56,91 @@ int main() {
   // gettimeofday(&start, NULL); // Start timer
 
   struct MyHeader headerData;
+  socklen_t len = sizeof(clientAddr);
 
   while (1) {
-    fd_set readfds;
-    FD_ZERO(&readfds);
-    FD_SET(server_fd, &readfds);
 
-    struct timeval timeout;
-    timeout.tv_sec = 5;
-    timeout.tv_usec = 0;
-
-    int activity = select(server_fd + 1, &readfds, NULL, NULL, &timeout);
     while (waitpid(-1, NULL, WNOHANG) > 0)
       ;
-    if (activity < 0) {
-      perror("select error");
-      close(server_fd);
-      break;
-    } else if (activity == 0) {
-      printf("No data for 5 seconds. Still alive ...\n");
+
+    int rc = recvfrom(server_fd, buff, BUFF_SIZE - 1, 0,
+                      (struct sockaddr *)&clientAddr, &len);
+
+    if (rc < 0) {
+      perror("recvfrom error");
       continue;
     }
 
-    if (FD_ISSET(server_fd, &readfds)) {
-      socklen_t len = sizeof(clientAddr);
+    enum PacketType type;
+    memcpy(&type, buff, sizeof(int));
+    int ackno;
+    memcpy(&ackno, buff + sizeof(int), sizeof(int));
 
-      int rc = recvfrom(server_fd, buff, BUFF_SIZE - 1, 0,
-                        (struct sockaddr *)&clientAddr, &len);
+    type = ntohl(type);
+    ackno = ntohl(ackno);
+    printf("Processing %s:%d with type %d.....\n",
+           inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port), type);
 
-      if (rc < 0) {
-        perror("recvfrom error");
-        continue;
-      }
+    switch (type) {
+    case DATA: {
+      if (ackno == 1) {
 
-      enum PacketType type;
-      memcpy(&type, buff, sizeof(int));
-      int ackno;
-      memcpy(&ackno, buff + sizeof(int), sizeof(int));
-
-      type = ntohl(type);
-      printf("Processing %s:%d with type %d.....\n",
-             inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port), type);
-
-      switch (type) {
-      case DATA &&ackno == 1: {
         // strncpy(res, "Data was received", PAYLOAD_SIZE - 1);
         // printf("Received data: %s\n\n", res);
         unpack(buff, BUFF_SIZE);
-        break;
-        // pid_t pid = fork();
-        // if (pid < 0) {
-        //   perror("fork() faild");
-        //   close(server_fd);
-        //   return -1;
-        // } else if (pid > 0) {
-        //   printf("I am parent with pid %d\n", pid);
-        // } else if (pid == 0) {
-        //   unpack(buff, rc);
-        //   printf("Now exiting child process\n");
-        //   wc = sendto(server_fd, res, BUFF_SIZE, 0,
-        //               (struct sockaddr *)&clientAddr, sizeof(clientAddr));
-        //   if (wc < 0) {
-        //     perror("sendto err()");
-        //     continue;
-        //   }
-        //
-        //   memset(buff, 0, BUFF_SIZE);
-        //
-        //   exit(0);
-        //   break;
-        // }
+      } else {
+        printf("Received DATA but unexpected ackno: %d\n", ackno);
       }
-      case ACK: {
-        printf("Received ack\n");
-        headerData.ackno = htonl(0);
-        headerData.type = htonl(ACK);
-        memcpy(res, &headerData, sizeof(headerData));
-        wc = sendto(server_fd, res, sizeof(headerData), 0,
-                    (struct sockaddr *)&clientAddr, sizeof(clientAddr));
-
-        if (wc < 0) {
-          perror("sendto err()");
-          continue;
-        }
-        printf("Ack was sent back\n");
-        break;
-      }
-      case RESET: {
-        printf("Received reset\n");
-        strncpy(res, "Reset was received, nothins is done\n", PAYLOAD_SIZE - 1);
-        break;
-      }
-      }
-
-      memset(&headerData, 0, sizeof(headerData));
-      memset(&buff, 0, BUFF_SIZE);
-      memset(res, 0, PAYLOAD_SIZE);
+      break;
+      // pid_t pid = fork();
+      // if (pid < 0) {
+      //   perror("fork() faild");
+      //   close(server_fd);
+      //   return -1;
+      // } else if (pid > 0) {
+      //   printf("I am parent with pid %d\n", pid);
+      // } else if (pid == 0) {
+      //   unpack(buff, rc);
+      //   printf("Now exiting child process\n");
+      //   wc = sendto(server_fd, res, BUFF_SIZE, 0,
+      //               (struct sockaddr *)&clientAddr, sizeof(clientAddr));
+      //   if (wc < 0) {
+      //     perror("sendto err()");
+      //     continue;
+      //   }
+      //
+      //   memset(buff, 0, BUFF_SIZE);
+      //
+      //   exit(0);
+      //   break;
+      // }
     }
+    case ACK: {
+      printf("Received ack, now waiting 2 sec\n");
+      headerData.ackno = htonl(0);
+      headerData.type = htonl(ACK);
+      memcpy(res, &headerData, sizeof(headerData));
+      sleep(2);
+      wc = sendto(server_fd, res, sizeof(headerData), 0,
+                  (struct sockaddr *)&clientAddr, sizeof(clientAddr));
+
+      if (wc < 0) {
+        perror("sendto err()");
+        continue;
+      }
+      printf("Ack was sent back\n");
+      break;
+    }
+    case RESET: {
+      printf("Received reset\n");
+      strncpy(res, "Reset was received, nothins is done\n", PAYLOAD_SIZE - 1);
+      break;
+    }
+    }
+
+    memset(&headerData, 0, sizeof(headerData));
+    memset(&buff, 0, BUFF_SIZE);
+    memset(res, 0, PAYLOAD_SIZE);
 
     // gettimeofday(&end, NULL); // End timer
     //
