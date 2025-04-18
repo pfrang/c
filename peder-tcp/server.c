@@ -27,8 +27,8 @@ void unpack(char *buff, int n) {
   memcpy(&received.type, buff, sizeof(int));
   memcpy(&received.ackno, buff + sizeof(int), sizeof(int));
   memcpy(receivedBuff, buff + HEADER_SIZE, BUFF_SIZE - HEADER_SIZE);
-  printf("DATA: Received payload: type: %d and ackno: %d with msg: %s\n", ntohl(received.type), ntohl(received.ackno),
-         receivedBuff);
+  printf("DATA: Received payload: type: %d and ackno: %d with msg: %s\n",
+         ntohl(received.type), ntohl(received.ackno), receivedBuff);
 }
 
 int main() {
@@ -89,7 +89,8 @@ int main() {
     if (FD_ISSET(server_fd, &readfds)) {
       socklen_t len = sizeof(clientAddr);
 
-      int rc = recvfrom(server_fd, buff, BUFF_SIZE - 1, 0, (struct sockaddr *)&clientAddr, &len);
+      int rc = recvfrom(server_fd, buff, BUFF_SIZE - 1, 0,
+                        (struct sockaddr *)&clientAddr, &len);
 
       if (rc < 0) {
         perror("recvfrom error");
@@ -102,7 +103,8 @@ int main() {
       memcpy(&ackno, buff + sizeof(int), sizeof(int));
 
       type = ntohl(type);
-      printf("Processing %s:%d with type %d.....\n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port), type);
+      printf("Processing %s:%d with type %d.....\n",
+             inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port), type);
 
       switch (type) {
       case DATA &&ackno == 1: {
@@ -138,7 +140,8 @@ int main() {
         headerData.ackno = htonl(0);
         headerData.type = htonl(ACK);
         memcpy(res, &headerData, sizeof(headerData));
-        wc = sendto(server_fd, res, sizeof(headerData), 0, (struct sockaddr *)&clientAddr, sizeof(clientAddr));
+        wc = sendto(server_fd, res, sizeof(headerData), 0,
+                    (struct sockaddr *)&clientAddr, sizeof(clientAddr));
 
         if (wc < 0) {
           perror("sendto err()");
