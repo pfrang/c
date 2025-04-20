@@ -13,11 +13,13 @@
 #include "headers.h"
 
 int main(int argc, char *argv[]) {
-  int clientSocket, wc;
+  int clientSocket, wc, rc;
   char buff[BUFF_SIZE];
-  struct sockaddr_in serverAddr;
+  struct sockaddr_in serverAddr, clientAddr;
 
   clientSocket = socket(AF_INET, SOCK_DGRAM, 0);
+
+  socklen_t clientLen = sizeof(clientAddr);
 
   if (clientSocket < 0) {
     perror("socket");
@@ -35,32 +37,37 @@ int main(int argc, char *argv[]) {
   if (argc == 2) {
     msg = argv[1];
   } else {
-    msg = "Hei hei";
+    msg = "Default msg, change with a CLI arg";
   }
 
   struct timeval start, end;
-  gettimeofday(&start, NULL);  // Start timer
+  gettimeofday(&start, NULL); // Start timer
 
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 5; i++) {
     headerData.type = htonl(i + 1);
     headerData.ackno = htonl(11 - i);
     memcpy(buff, &headerData, sizeof(headerData));
     memcpy(buff + sizeof(headerData), msg, strlen(msg) + 1);
 
-    wc = sendto(clientSocket, buff, sizeof(headerData) + strlen(msg) + 1, 0,
-                (struct sockaddr *)&serverAddr, sizeof(serverAddr));
+    wc = sendto(clientSocket, buff, sizeof(headerData) + strlen(msg) + 1, 0, (struct sockaddr *)&serverAddr,
+                sizeof(serverAddr));
     if (wc < 0) {
       perror("sendto error");
       continue;
     }
 
-    printf("Sent type:%d and ackno:%d with msg:%s\n", ntohl(headerData.type),
-           ntohl(headerData.ackno), msg);
     memset(buff, 0, BUFF_SIZE);
-    sleep(1);
+    printf("Sent type:%d and ackno:%d with msg:%s\n", ntohl(headerData.type), ntohl(headerData.ackno), msg);
+
+    int rc = recvfrom(clientSocket, buff, BUFF_SIZE - 1, 0, (struct sockaddr *)&clientAddr, &clientLen);
+    if (rc < 0) {
+      perror("recvfrom error()");
+      continue;
+    }
+    memset(buff, 0, BUFF_SIZE);
   }
 
-  gettimeofday(&end, NULL);  // End timer
+  gettimeofday(&end, NULL); // End timer
 
   long seconds = end.tv_sec - start.tv_sec;
   long useconds = end.tv_usec - start.tv_usec;
