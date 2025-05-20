@@ -8,11 +8,13 @@
 #define PAYLOAD_SIZE 1016
 
 enum PacketType { DATA, ACK, RESET };
+typedef struct MyHeader MyHeader;
+
 struct MyHeader {
   enum PacketType type;
   int ackno;
-  char *buff;
   int buffLen;
+  char *buff;
 };
 
 #endif
