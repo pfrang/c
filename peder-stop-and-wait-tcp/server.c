@@ -9,12 +9,10 @@
 #define PORT 8080
 
 int main() {
-  char *buff;
-  struct sockaddr_in serverAddr;
-  int serverFd;
+  struct sockaddr_in serverAddr, clientAddr;
+  int serverFd, rc, wc;
 
-  MyHeader *recvHeader = calloc(1, sizeof(MyHeader));
-
+  MyHeader *recvHeader = calloc(1, BUFF_SIZE);
   serverFd = socket(AF_INET, SOCK_DGRAM, 0);
 
   memset(&serverAddr, 0, sizeof(serverAddr));
@@ -28,6 +26,22 @@ int main() {
     close(serverFd);
   }
 
+  socklen_t len = sizeof(clientAddr);
   printf("UDP server listening on port %d...\n", PORT);
+  while (1) {
+
+    rc = recvfrom(serverFd, recvHeader, BUFF_SIZE, 0,
+                  (struct sockaddr *)&clientAddr, &len);
+
+    if (rc < 0) {
+      printf("Error in rc %d", rc);
+    }
+
+    printf("Received type %d, ackno %d, buffLen %d, buff %s\n",
+           ntohs(recvHeader->type), ntohs(recvHeader->ackno),
+           ntohl(recvHeader->buffLen), recvHeader->buff);
+    memset(recvHeader, 0, BUFF_SIZE);
+  }
+  close(serverFd);
   return 0;
 }
