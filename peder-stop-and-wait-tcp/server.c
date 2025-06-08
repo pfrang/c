@@ -9,6 +9,7 @@
 #define PORT 8080
 
 int main() {
+
   struct sockaddr_in serverAddr, clientAddr;
   int serverFd, rc, wc;
 
@@ -28,6 +29,7 @@ int main() {
 
   socklen_t len = sizeof(clientAddr);
   printf("UDP server listening on port %d...\n", PORT);
+  short expectedAckno = 0;
   while (1) {
 
     rc = recvfrom(serverFd, recvHeader, BUFF_SIZE, 0,
@@ -40,6 +42,25 @@ int main() {
     printf("Received type %d, ackno %d, buffLen %d, buff %s\n",
            ntohs(recvHeader->type), ntohs(recvHeader->ackno),
            ntohl(recvHeader->buffLen), recvHeader->buff);
+    int recvAckno = ntohs(recvHeader->ackno);
+
+    if (expectedAckno != recvAckno) {
+      printf("Received wrong ACK\n");
+      memset(recvHeader, 0, BUFF_SIZE);
+      continue;
+    }
+
+    MyHeader sendHeader;
+    sendHeader.ackno = htons(1);
+
+    wc = sendto(serverFd, &sendHeader, sizeof(sendHeader), 0,
+                (struct sockaddr *)&clientAddr, len);
+    if (wc < 0) {
+      printf("Error sending\n");
+      continue;
+    }
+
+    expectedAckno = recvAckno ^ 1;
     memset(recvHeader, 0, BUFF_SIZE);
   }
   close(serverFd);
