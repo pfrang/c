@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
     printf("Usage %s: msg", argv[0]);
   }
 
-  char *msg = argv[1];
+
   struct sockaddr_in serverAddr;
   int serverFd, wc, rc;
 
@@ -24,14 +24,21 @@ int main(int argc, char *argv[]) {
   serverAddr.sin_family = AF_INET;
 
   socklen_t len = sizeof(serverAddr);
- int buffLen = htonl(strlen(msg));
+  int buffLen = strlen(argv[1]);
+
+	if(buffLen > PAYLOAD_SIZE)  {
+		printf("Too bug string\n");
+		return 0;
+	}
+
 
   recvHeader->type = ACK;
   recvHeader->ackno = htons(0);
-  recvHeader->buffLen = htonl(strlen(msg));
-	msg[strlen(msg)] = '\n';
+  recvHeader->buffLen = htonl(buffLen);
+	char *msg = malloc(buffLen);
+	msg[buffLen] = '\0';
 
-  strcpy(recvHeader->buff, msg);
+  strcpy(recvHeader->buff, argv[1]);
 
   // memset(recvHeader->buff, *str, strlen(str));
   while (1) {
