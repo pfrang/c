@@ -24,10 +24,12 @@ int main(int argc, char *argv[]) {
   serverAddr.sin_family = AF_INET;
 
   socklen_t len = sizeof(serverAddr);
+ int buffLen = htonl(strlen(msg));
 
   recvHeader->type = ACK;
   recvHeader->ackno = htons(0);
   recvHeader->buffLen = htonl(strlen(msg));
+	msg[strlen(msg)] = '\n';
 
   strcpy(recvHeader->buff, msg);
 
@@ -36,6 +38,9 @@ int main(int argc, char *argv[]) {
 
     wc = sendto(serverFd, recvHeader, BUFF_SIZE, 0,
                 (struct sockaddr *)&serverAddr, len);
+
+	fprintf(stderr, recvHeader->buff);
+
 
     if (wc < 0) {
       printf("Error sending msg\n");
