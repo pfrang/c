@@ -1,4 +1,3 @@
-
 #include "headers.h"
 #include <netinet/in.h>
 #include <stdio.h>
@@ -7,11 +6,11 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-int main(int argc, char *argv[]) {
-  if (argc < 2) {
-    printf("Usage %s: msg", argv[0]);
-  }
+void flipAck(MyHeader *recvHeader) {
+  recvHeader->ackno = recvHeader->ackno ^ 1;
+}
 
+int main(int argc, char *argv[]) {
 
   struct sockaddr_in serverAddr;
   int serverFd, wc, rc;
@@ -24,30 +23,21 @@ int main(int argc, char *argv[]) {
   serverAddr.sin_family = AF_INET;
 
   socklen_t len = sizeof(serverAddr);
-  int buffLen = strlen(argv[1]);
 
-	if(buffLen > PAYLOAD_SIZE)  {
-		printf("Too bug string\n");
-		return 0;
-	}
-
-
-  recvHeader->type = ACK;
-  recvHeader->ackno = htons(0);
-  recvHeader->buffLen = htonl(buffLen);
-	char *msg = malloc(buffLen);
-	msg[buffLen] = '\0';
-
-  strcpy(recvHeader->buff, argv[1]);
-
-  // memset(recvHeader->buff, *str, strlen(str));
   while (1) {
+    char *tmpBuff = calloc(1, PAYLOAD_SIZE);
+
+    recvHeader->type = ACK;
+    recvHeader->ackno = 0;
+    printf("Waiting for input...\n");
+    scanf("%s", tmpBuff);
+    int buffLen = strlen(tmpBuff);
+    tmpBuff[buffLen] = '\0';
 
     wc = sendto(serverFd, recvHeader, BUFF_SIZE, 0,
                 (struct sockaddr *)&serverAddr, len);
 
-	fprintf(stderr, recvHeader->buff);
-
+    printf("\n");
 
     if (wc < 0) {
       printf("Error sending msg\n");
@@ -62,6 +52,16 @@ int main(int argc, char *argv[]) {
       continue;
     }
     printf("Received ackno  %d \n", ntohs(recvHeader->ackno));
+    printf("Connectino established, sending payload...\n");
+
+    memcpy(recvHeader->buff, tmpBuff, buffLen);
+    recvHeader->buff[buffLen] = '\0';
+
+    recvHeader->type = DATA;
+    recvHeader->buffLen = htonl(buffLen);
+
+    wc = sendto(serverFd, recvHeader, BUFF_SIZE, 0,
+                (struct sockaddr *)&serverAddr, len);
 
     memset(recvHeader, 0, BUFF_SIZE);
   }

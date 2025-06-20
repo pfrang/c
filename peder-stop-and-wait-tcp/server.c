@@ -39,8 +39,8 @@ int main() {
       printf("Error in rc %d", rc);
     }
 
-    printf("Received type %d, ackno %d, buffLen %d, buff: %s\n",
-           ntohs(recvHeader->type), ntohs(recvHeader->ackno),
+    printf("Received type %u, ackno %d, buffLen %d, buff: %s\n",
+           recvHeader->type, ntohs(recvHeader->ackno),
            ntohl(recvHeader->buffLen), recvHeader->buff);
     int recvAckno = ntohs(recvHeader->ackno);
 
@@ -66,5 +66,3 @@ int main() {
   close(serverFd);
   return 0;
 }
-
-
