@@ -1,9 +1,11 @@
 #include "headers.h"
+#include "shared.h"
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 #define PORT 8080
@@ -30,18 +32,18 @@ int main() {
   socklen_t len = sizeof(clientAddr);
   printf("UDP server listening on port %d...\n", PORT);
   short expectedAckno = 0;
+
   while (1) {
 
-    rc = recvfrom(serverFd, recvHeader, BUFF_SIZE, 0,
-                  (struct sockaddr *)&clientAddr, &len);
+    rc = recvfrom(serverFd, recvHeader, BUFF_SIZE, 0, (struct sockaddr *)&clientAddr, &len);
+    printf("read data from recvfrom..\n");
+    print_zulu_time();
 
     if (rc < 0) {
       printf("Error in rc %d", rc);
     }
 
-    printf("Received type %u, ackno %d, buffLen %d, buff: %s\n",
-           recvHeader->type, ntohs(recvHeader->ackno),
-           ntohl(recvHeader->buffLen), recvHeader->buff);
+    printf("Received type %u, ackno %d, buffLen %d, buff: %s\n", recvHeader->type, ntohs(recvHeader->ackno), ntohl(recvHeader->buffLen), recvHeader->buff);
     int recvAckno = ntohs(recvHeader->ackno);
 
     if (expectedAckno != recvAckno) {
@@ -53,8 +55,9 @@ int main() {
     MyHeader sendHeader;
     sendHeader.ackno = htons(1);
 
-    wc = sendto(serverFd, &sendHeader, sizeof(sendHeader), 0,
-                (struct sockaddr *)&clientAddr, len);
+    printf("sending data..\n");
+    print_zulu_time();
+    wc = sendto(serverFd, &sendHeader, sizeof(sendHeader), 0, (struct sockaddr *)&clientAddr, len);
     if (wc < 0) {
       printf("Error sending\n");
       continue;

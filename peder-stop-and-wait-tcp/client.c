@@ -1,14 +1,14 @@
 #include "headers.h"
+#include "shared.h"
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <unistd.h>
 
-void flipAck(MyHeader *recvHeader) {
-  recvHeader->ackno = recvHeader->ackno ^ 1;
-}
+void flipAck(MyHeader *recvHeader) { recvHeader->ackno = recvHeader->ackno ^ 1; }
 
 int main(int argc, char *argv[]) {
 
@@ -34,8 +34,9 @@ int main(int argc, char *argv[]) {
     int buffLen = strlen(tmpBuff);
     tmpBuff[buffLen] = '\0';
 
-    wc = sendto(serverFd, recvHeader, BUFF_SIZE, 0,
-                (struct sockaddr *)&serverAddr, len);
+    wc = sendto(serverFd, recvHeader, BUFF_SIZE, 0, (struct sockaddr *)&serverAddr, len);
+    printf("just sent data for the FIRST TIME..\n");
+    print_zulu_time();
 
     printf("\n");
 
@@ -45,8 +46,10 @@ int main(int argc, char *argv[]) {
     }
 
     memset(recvHeader, 0, BUFF_SIZE);
-    rc = recvfrom(serverFd, recvHeader, BUFF_SIZE, 0,
-                  (struct sockaddr *)&serverAddr, &len);
+
+    rc = recvfrom(serverFd, recvHeader, BUFF_SIZE, 0, (struct sockaddr *)&serverAddr, &len);
+    printf("read data from recvfrom FIRST TIME..\n");
+    print_zulu_time();
     if (rc < 0) {
       printf("Error receiving \n");
       continue;
@@ -60,9 +63,10 @@ int main(int argc, char *argv[]) {
     recvHeader->type = DATA;
     recvHeader->buffLen = htonl(buffLen);
 
-    wc = sendto(serverFd, recvHeader, BUFF_SIZE, 0,
-                (struct sockaddr *)&serverAddr, len);
-
+    wc = sendto(serverFd, recvHeader, BUFF_SIZE, 0, (struct sockaddr *)&serverAddr, len);
+    printf("just sent payload for the second TIME..\n");
+    print_zulu_time();
+    printf("FINISH\n");
     memset(recvHeader, 0, BUFF_SIZE);
   }
 
