@@ -1,5 +1,6 @@
 #include "headers.h"
 #include "shared.h"
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,6 +16,7 @@ struct MyHeader Clients[MAX_CLIENTS];
 
 int main() {
 
+  int clientLen = 0;
   struct sockaddr_in serverAddr, clientAddr;
   int serverFd, rc, wc;
 
@@ -38,7 +40,8 @@ int main() {
 
   while (1) {
 
-    rc = recvfrom(serverFd, recvHeader, BUFF_SIZE, 0, (struct sockaddr *)&clientAddr, &len);
+    rc = recvfrom(serverFd, recvHeader, BUFF_SIZE, 0,
+                  (struct sockaddr *)&clientAddr, &len);
     printf("read data from recvfrom..\n");
     print_zulu_time();
 
@@ -46,7 +49,17 @@ int main() {
       printf("Error in rc %d", rc);
     }
 
-    printf("Received type %u, ackno %d, buffLen %d, buff: %s\n", recvHeader->type, ntohs(recvHeader->ackno), ntohl(recvHeader->buffLen), recvHeader->buff);
+    char ipStr[INET_ADDRSTRLEN];
+    struct in_addr ipAddr = {.s_addr = recvHeader->src_ip};
+    inet_ntop(AF_INET, &ipAddr, ipStr, sizeof(ipStr));
+
+    Clients[clientLen] = *recvHeader;
+    printf("Received type %u, ackno %d, src ip: %s, src port %d, buffLen %d, "
+           "buff: %s\n",
+           recvHeader->type, ntohs(recvHeader->ackno), ipStr,
+           ntohs(recvHeader->src_port), ntohl(recvHeader->buffLen),
+           recvHeader->buff);
+
     int recvAckno = ntohs(recvHeader->ackno);
 
     if (expectedAckno != recvAckno) {
@@ -60,7 +73,8 @@ int main() {
 
     printf("sending data..\n");
     print_zulu_time();
-    wc = sendto(serverFd, &sendHeader, sizeof(sendHeader), 0, (struct sockaddr *)&clientAddr, len);
+    wc = sendto(serverFd, &sendHeader, sizeof(sendHeader), 0,
+                (struct sockaddr *)&clientAddr, len);
     if (wc < 0) {
       printf("Error sending\n");
       continue;
