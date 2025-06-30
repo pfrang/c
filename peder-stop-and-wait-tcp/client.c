@@ -1,4 +1,5 @@
 #include "headers.h"
+#include "shared.h"
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -8,9 +9,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-void flipAck(MyHeader *recvHeader) {
-  recvHeader->ackno = recvHeader->ackno ^ 1;
-}
+void flipAck(MyHeader *recvHeader) { recvHeader->ackno = recvHeader->ackno ^ 1; }
 
 int main(int argc, char *argv[]) {
   struct sockaddr_in serverAddr, clientAddr;
@@ -29,8 +28,7 @@ int main(int argc, char *argv[]) {
   inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
 
   // "Connect" the UDP socket to the destination
-  if (connect(serverFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) <
-      0) {
+  if (connect(serverFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
     perror("connect");
     exit(EXIT_FAILURE);
   }
@@ -41,9 +39,9 @@ int main(int argc, char *argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  // These are already in network byte order
   in_addr_t local_ip = clientAddr.sin_addr.s_addr;
   in_port_t local_port = clientAddr.sin_port;
+  printf("Local ip %d, port %d\n", local_ip, local_port);
 
   while (1) {
     printf("Waiting for input...\n");
@@ -58,6 +56,7 @@ int main(int argc, char *argv[]) {
     recvHeader->src_port = local_port;
 
     // Send ACK packet
+    print_zulu_time();
     wc = send(serverFd, recvHeader, BUFF_SIZE, 0);
     printf("Sent ACK\n");
 
@@ -86,6 +85,7 @@ int main(int argc, char *argv[]) {
     recvHeader->src_ip = local_ip;
     recvHeader->src_port = local_port;
 
+    print_zulu_time();
     wc = send(serverFd, recvHeader, BUFF_SIZE, 0);
     printf("Sent payload\n");
 

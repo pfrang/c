@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #define PORT 8080
@@ -18,7 +19,7 @@ int main() {
 
   int clientLen = 0;
   struct sockaddr_in serverAddr, clientAddr;
-  int serverFd, rc, wc;
+  int serverFd, rc, wc, isNewClient;
 
   MyHeader *recvHeader = calloc(1, BUFF_SIZE);
   serverFd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -36,13 +37,56 @@ int main() {
 
   socklen_t len = sizeof(clientAddr);
   printf("UDP server listening on port %d...\n", PORT);
-  short expectedAckno = 0;
 
   while (1) {
 
-    rc = recvfrom(serverFd, recvHeader, BUFF_SIZE, 0,
-                  (struct sockaddr *)&clientAddr, &len);
-    printf("read data from recvfrom..\n");
+    rc = recvfrom(serverFd, recvHeader, BUFF_SIZE, 0, (struct sockaddr *)&clientAddr, &len);
+    isNewClient = 1;
+
+    int recvAckno = ntohs(recvHeader->ackno);
+    enum PacketType recvType = recvHeader->type;
+    short srcPort = recvHeader->src_port;
+    u_int32_t srcIP = recvHeader->src_ip;
+
+    for (int i = 0; i < clientLen + 1; i++) {
+      if (Clients[i].src_ip == srcIP && Clients[i].src_port == srcPort) {
+        isNewClient = 0;
+        break;
+      }
+    }
+
+    if (isNewClient) {
+      printf("New client has connected, expecting ACK\n");
+      if (recvType != ACK) {
+        printf("Did not receive ACK\n");
+        continue;
+      }
+
+      // Add client to list
+      if (clientLen < MAX_CLIENTS) {
+        Clients[clientLen++] = *recvHeader;
+      } else {
+        printf("Max clients reached!\n");
+      }
+    } else {
+      printf("Client exists\n");
+    }
+
+    switch (recvType) {
+    case ACK: {
+      printf("Received ACK\n");
+      break;
+    }
+    case DATA: {
+      printf("Received DATA\n");
+      break;
+    }
+    case RESET: {
+      printf("Received RESET\n");
+      break;
+    }
+    }
+
     print_zulu_time();
 
     if (rc < 0) {
@@ -53,34 +97,22 @@ int main() {
     struct in_addr ipAddr = {.s_addr = recvHeader->src_ip};
     inet_ntop(AF_INET, &ipAddr, ipStr, sizeof(ipStr));
 
-    Clients[clientLen] = *recvHeader;
-    printf("Received type %u, ackno %d, src ip: %s, src port %d, buffLen %d, "
+    printf("Received type %u, ackno %d, src ip: %s, src port %hd, buffLen %d, "
            "buff: %s\n",
-           recvHeader->type, ntohs(recvHeader->ackno), ipStr,
-           ntohs(recvHeader->src_port), ntohl(recvHeader->buffLen),
-           recvHeader->buff);
-
-    int recvAckno = ntohs(recvHeader->ackno);
-
-    if (expectedAckno != recvAckno) {
-      printf("Received wrong ACK\n");
-      memset(recvHeader, 0, BUFF_SIZE);
-      continue;
-    }
+           recvHeader->type, ntohs(recvHeader->ackno), ipStr, srcPort, ntohl(recvHeader->buffLen), recvHeader->buff);
 
     MyHeader sendHeader;
     sendHeader.ackno = htons(1);
 
     printf("sending data..\n");
     print_zulu_time();
-    wc = sendto(serverFd, &sendHeader, sizeof(sendHeader), 0,
-                (struct sockaddr *)&clientAddr, len);
+    wc = sendto(serverFd, &sendHeader, sizeof(sendHeader), 0, (struct sockaddr *)&clientAddr, len);
     if (wc < 0) {
       printf("Error sending\n");
       continue;
     }
 
-    expectedAckno = recvAckno ^ 1;
+    // expectedAckno = recvAckno ^ 1;
     memset(recvHeader, 0, BUFF_SIZE);
   }
   close(serverFd);

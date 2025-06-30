@@ -8,7 +8,7 @@
 #define HEADER_SIZE 20
 #define PAYLOAD_SIZE (BUFF_SIZE - HEADER_SIZE)
 
-enum PacketType { DATA = 0, ACK = 1, RESET = 2 };
+enum PacketType { ACK = 0, DATA = 1, RESET = 2 };
 typedef struct MyHeader MyHeader;
 
 struct MyHeader {
