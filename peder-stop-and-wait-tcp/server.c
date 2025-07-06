@@ -40,13 +40,19 @@ int main() {
 
   while (1) {
 
-    rc = recvfrom(serverFd, recvHeader, BUFF_SIZE, 0, (struct sockaddr *)&clientAddr, &len);
+    rc = recvfrom(serverFd, recvHeader, BUFF_SIZE, 0,
+                  (struct sockaddr *)&clientAddr, &len);
+
     isNewClient = 1;
 
     int recvAckno = ntohs(recvHeader->ackno);
     enum PacketType recvType = recvHeader->type;
     short srcPort = recvHeader->src_port;
     u_int32_t srcIP = recvHeader->src_ip;
+
+    if (rc == 0) {
+      printf("Client has disconnected: ip: %d port: %d \n", srcIP, srcPort);
+    }
 
     for (int i = 0; i < clientLen + 1; i++) {
       if (Clients[i].src_ip == srcIP && Clients[i].src_port == srcPort) {
@@ -99,14 +105,16 @@ int main() {
 
     printf("Received type %u, ackno %d, src ip: %s, src port %hd, buffLen %d, "
            "buff: %s\n",
-           recvHeader->type, ntohs(recvHeader->ackno), ipStr, srcPort, ntohl(recvHeader->buffLen), recvHeader->buff);
+           recvHeader->type, ntohs(recvHeader->ackno), ipStr, srcPort,
+           ntohl(recvHeader->buffLen), recvHeader->buff);
 
     MyHeader sendHeader;
     sendHeader.ackno = htons(1);
 
     printf("sending data..\n");
     print_zulu_time();
-    wc = sendto(serverFd, &sendHeader, sizeof(sendHeader), 0, (struct sockaddr *)&clientAddr, len);
+    wc = sendto(serverFd, &sendHeader, sizeof(sendHeader), 0,
+                (struct sockaddr *)&clientAddr, len);
     if (wc < 0) {
       printf("Error sending\n");
       continue;
