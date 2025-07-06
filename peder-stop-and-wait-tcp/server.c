@@ -40,42 +40,34 @@ int main() {
 
   while (1) {
 
-    rc = recvfrom(serverFd, recvHeader, BUFF_SIZE, 0,
-                  (struct sockaddr *)&clientAddr, &len);
+    rc = recvfrom(serverFd, recvHeader, BUFF_SIZE, 0, (struct sockaddr *)&clientAddr, &len);
 
     isNewClient = 1;
 
     int recvAckno = ntohs(recvHeader->ackno);
     enum PacketType recvType = recvHeader->type;
-    short srcPort = recvHeader->src_port;
+    u_int16_t srcPort = recvHeader->src_port;
     u_int32_t srcIP = recvHeader->src_ip;
 
     if (rc == 0) {
       printf("Client has disconnected: ip: %d port: %d \n", srcIP, srcPort);
     }
+    if (rc < 0) {
+      printf("Error in rc %d", rc);
+    }
+    char ipStr[INET_ADDRSTRLEN];
+    struct in_addr ipAddr = {.s_addr = recvHeader->src_ip};
+    inet_ntop(AF_INET, &ipAddr, ipStr, sizeof(ipStr));
+
+    printf("Received type %u, ackno %d, src ip: %s, src port %u, buffLen %d, "
+           "buff: %s\n",
+           recvHeader->type, ntohs(recvHeader->ackno), ipStr, ntohs(srcPort), ntohl(recvHeader->buffLen), recvHeader->buff);
 
     for (int i = 0; i < clientLen + 1; i++) {
       if (Clients[i].src_ip == srcIP && Clients[i].src_port == srcPort) {
         isNewClient = 0;
         break;
       }
-    }
-
-    if (isNewClient) {
-      printf("New client has connected, expecting ACK\n");
-      if (recvType != ACK) {
-        printf("Did not receive ACK\n");
-        continue;
-      }
-
-      // Add client to list
-      if (clientLen < MAX_CLIENTS) {
-        Clients[clientLen++] = *recvHeader;
-      } else {
-        printf("Max clients reached!\n");
-      }
-    } else {
-      printf("Client exists\n");
     }
 
     switch (recvType) {
@@ -93,28 +85,28 @@ int main() {
     }
     }
 
-    print_zulu_time();
-
-    if (rc < 0) {
-      printf("Error in rc %d", rc);
+    if (isNewClient) {
+      printf("New client has connected, expected ACK\n");
+      if (recvType != ACK) {
+        printf("Did not receive ACK\n");
+        continue;
+      }
+      // Add client to list
+      if (clientLen < MAX_CLIENTS) {
+        Clients[clientLen++] = *recvHeader;
+      } else {
+        printf("Max clients reached!\n");
+      }
+    } else {
+      printf("Client exists\n");
     }
-
-    char ipStr[INET_ADDRSTRLEN];
-    struct in_addr ipAddr = {.s_addr = recvHeader->src_ip};
-    inet_ntop(AF_INET, &ipAddr, ipStr, sizeof(ipStr));
-
-    printf("Received type %u, ackno %d, src ip: %s, src port %hd, buffLen %d, "
-           "buff: %s\n",
-           recvHeader->type, ntohs(recvHeader->ackno), ipStr, srcPort,
-           ntohl(recvHeader->buffLen), recvHeader->buff);
 
     MyHeader sendHeader;
     sendHeader.ackno = htons(1);
 
-    printf("sending data..\n");
+    printf("ACK'ing the msg..\n");
     print_zulu_time();
-    wc = sendto(serverFd, &sendHeader, sizeof(sendHeader), 0,
-                (struct sockaddr *)&clientAddr, len);
+    wc = sendto(serverFd, &sendHeader, sizeof(sendHeader), 0, (struct sockaddr *)&clientAddr, len);
     if (wc < 0) {
       printf("Error sending\n");
       continue;

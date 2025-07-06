@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 void flipAck(MyHeader *recvHeader) { recvHeader->ackno = recvHeader->ackno ^ 1; }
@@ -21,7 +22,6 @@ int main(int argc, char *argv[]) {
 
   serverFd = socket(AF_INET, SOCK_DGRAM, 0);
 
-  // Set up destination address (localhost:8080)
   memset(&serverAddr, 0, sizeof(serverAddr));
   serverAddr.sin_family = AF_INET;
   serverAddr.sin_port = htons(8080);
@@ -40,43 +40,44 @@ int main(int argc, char *argv[]) {
   }
 
   in_addr_t local_ip = clientAddr.sin_addr.s_addr;
-  in_port_t local_port = clientAddr.sin_port;
-  printf("Local ip %d, port %d\n", local_ip, local_port);
+  u_int16_t local_port = clientAddr.sin_port;
+  printf("Local ip %d, port %u\n", local_ip, ntohs(local_port));
+
+  // Establish connection
+  // Fill out header
+  recvHeader->type = ACK;
+  recvHeader->ackno = 0;
+  recvHeader->src_ip = local_ip;
+  recvHeader->src_port = local_port;
+
+  // Send ACK packet
+  printf("Sending packet to establish connection..\n");
+  print_zulu_time();
+  wc = send(serverFd, recvHeader, BUFF_SIZE, 0);
+  printf("Sent ACK\n");
+
+  if (wc < 0) {
+    perror("send");
+    exit(0);
+  }
+
+  memset(recvHeader, 0, BUFF_SIZE);
+
+  // Receive response
+  rc = recv(serverFd, recvHeader, BUFF_SIZE, 0);
+  if (rc < 0) {
+    perror("recv");
+    exit(0);
+  }
+
+  printf("Received ackno: %d\n", ntohs(recvHeader->ackno));
+  printf("Connection established...\n");
 
   while (1) {
     printf("Waiting for input...\n");
     scanf("%s", tmpBuff);
     int buffLen = strlen(tmpBuff);
     tmpBuff[buffLen] = '\0';
-
-    // Fill out header
-    recvHeader->type = ACK;
-    recvHeader->ackno = 0;
-    recvHeader->src_ip = local_ip;
-    recvHeader->src_port = local_port;
-
-    // Send ACK packet
-    print_zulu_time();
-    wc = send(serverFd, recvHeader, BUFF_SIZE, 0);
-    printf("Sent ACK\n");
-
-    if (wc < 0) {
-      perror("send");
-      break;
-    }
-
-    memset(recvHeader, 0, BUFF_SIZE);
-
-    // Receive response
-    rc = recv(serverFd, recvHeader, BUFF_SIZE, 0);
-    if (rc < 0) {
-      perror("recv");
-      continue;
-    }
-
-    printf("Received ackno: %d\n", ntohs(recvHeader->ackno));
-    printf("Connection established, sending payload...\n");
-
     // Now send the actual DATA payload
     memcpy(recvHeader->buff, tmpBuff, buffLen);
     recvHeader->buff[buffLen] = '\0';
@@ -87,7 +88,14 @@ int main(int argc, char *argv[]) {
 
     print_zulu_time();
     wc = send(serverFd, recvHeader, BUFF_SIZE, 0);
-    printf("Sent payload\n");
+    printf("Sent payload, now waiting for ACK...\n");
+
+    rc = recv(serverFd, recvHeader, BUFF_SIZE, 0);
+    if (rc < 0) {
+      perror("recv");
+      exit(0);
+    }
+    printf("Received ACK %d\n", ntohs(recvHeader->ackno));
 
     memset(recvHeader, 0, BUFF_SIZE);
   }
