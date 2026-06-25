@@ -6,44 +6,12 @@
 
 #define CAPACITY 128
 
-struct Entry {
-  uint32_t val_size;
-  long val_pos;
-};
+void readFile(FILE *file);
 
 struct Record {
   uint32_t val_size;
   char *buff;
 };
-
-void readFile(FILE *f) {
-  fseek(f, 0, SEEK_SET);
-
-  uint32_t key_len;
-
-  while (fread(&key_len, sizeof(uint32_t), 1, f) == 1) {
-    fread(&key_len, sizeof(uint32_t), 1, f);
-    long val_pos = ftell(f); // value starts here
-
-    char *key = malloc(key_len + 1);
-    fread(key, 1, key_len, f);
-    key[key_len] = '\0';
-
-    // // skip over value }
-
-    struct Entry entry = {};
-    fseek(f, 0, SEEK_END);
-    long size = ftell(f);
-    fseek(f, 0, SEEK_SET);
-
-    char *buf = malloc(size + 1);
-    fread(buf, 1, size, f);
-    fclose(f);
-  }
-  // for (long i = 0; i < size; i++) {
-  //   printf("%s\n", buf[i]);
-  // }
-}
 
 int main(int argc, char *argv[]) {
   if (argc < 2) {
@@ -52,44 +20,68 @@ int main(int argc, char *argv[]) {
   }
 
   int readRequest = 0;
-
-  char *filePath = argv[1];
-  char *readMode = argv[2];
   struct Record record;
 
-  if (strcmp(readMode, "-r") == "0") {
+  char *filePath = argv[1];
+  if (argc >= 3 && strcmp(argv[2], "-r") == 0) {
     readRequest = 1;
   }
 
-  FILE *file = fopen(filePath, "a");
+  FILE *file = fopen(filePath, readRequest ? "r" : "a");
 
   if (readRequest) {
     readFile(file);
   } else {
-
     while (1) {
 
-      int capacity = CAPACITY;
+      char *buff = malloc(CAPACITY);
 
-      char *buff = malloc(capacity);
+      int buffSize;
 
       printf("Enter something: \n");
-      fgets(buff, capacity, stdin);
+      fgets(buff, CAPACITY, stdin);
+      buffSize = strlen(buff);
+      if (buffSize > 0 && buff[buffSize - 1] == '\n') {
+        buff[--buffSize] = '\0';
+      }
 
-      size_t buffSize = strlen(buff);
+      if (buffSize == 0) {
+        printf("Nothing was provided, try again\n");
+        free(buff);
+        continue;
+      }
 
-      record.val_size = buffSize;
-      strcpy(record.buff, buff);
-      size_t recordSize = sizeof(record);
+      char *setBuff = malloc(sizeof(uint32_t) + buffSize);
+      memcpy(setBuff, &buffSize, sizeof(int));
+      // Start writing from  sizeof(int) position
+      memcpy(setBuff + sizeof(int), buff, buffSize);
 
-      fwrite(&record, recordSize, 1, file); // (data, byte_size, count, file)
+      fwrite(setBuff, sizeof(int) + buffSize, 1,
+             file); // (data, byte_size, count, file)
+      fflush(file);
 
       free(buff);
-
-      // readFile(file);
+      free(setBuff);
     }
   }
+
   fclose(file);
 
   return 0;
+}
+
+void readFile(FILE *f) {
+
+  fseek(f, 0, SEEK_SET);
+
+  struct Record record;
+
+  while (fread(&record.val_size, sizeof(uint32_t), 1, f) == 1) {
+    record.buff = malloc(record.val_size + 1);
+    fread(record.buff, 1, record.val_size, f);
+    record.buff[record.val_size] = '\0';
+
+    printf("val_size: %u, buff: %s\n", record.val_size, record.buff);
+    free(record.buff);
+  }
 }
